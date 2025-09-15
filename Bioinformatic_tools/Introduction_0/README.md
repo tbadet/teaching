@@ -258,7 +258,7 @@ tail -n 2 new_file.txt
 
 ***As a little exercise:***  
 
-Use the echo "Hello again!" >> new_file.txt command to add at least 11 lines to your new_file.txt.  
+Use the echo "Hello again!" >> new_file.txt command to add it as a new line to your new_file.txt.  
 
 Use now the head command to create a new file called only_the_top3.txt containing the first three lines of new_file.txt.  
 
