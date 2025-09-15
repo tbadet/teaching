@@ -118,7 +118,7 @@ Try it out by simply typing ```pwd``` and ENTER.
 
 -------------------------
 
-### $\color{Orange}{\textbf{The mkdir command ("make directory"))}}$  
+### $\color{Orange}{\textbf{The mkdir command ("make directory")}}$  
 
 - "Make directory" does exactly this. Use this to create a directory called ```my_first_scripts``` by issuing the command ```mkdir my_first_scripts```.   
   
@@ -128,7 +128,7 @@ Search if other mkdir options exist. An example is ```mkdir -p```.
 
 -------------------------
   
-### $\color{Orange}{\textbf{The cd command ("Change directory"))}}$  
+### $\color{Orange}{\textbf{The cd command ("Change directory")}}$  
 
 - "Change directory" - Allows you to change to a different directory (_i.e._ folder).  
 
