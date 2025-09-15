@@ -45,7 +45,7 @@ Designed to assess comfort with UNIX, clusters, and basic file handling.
    
 $\color{Orange}\Huge{\textbf{A. Command-Line Essentials}}$  
    
-```Connect to RStudio Server following the instructions on the general course page (two levels up):```    
+```Connect to RStudio Server following the instructions on the general course page (one levels up):```    
 
 - Enter your username and pass to log into the cluster using this [link](http://130.125.203.31:8787/)  
 
