@@ -146,7 +146,7 @@ head -n 50 bowtie_main.cpp
 make
 ```
   
-$\color{Green}\Large{\textbf{Q2:}}$ --> **List the newly created files by the make command.**  
+$\color{Green}\Large{\textbf{Q2:}}$ --> **List the newly created files by the make command.**  (OPTIONAL)
 
 `#` copy the newly created files to your own bin directory  
 ```
