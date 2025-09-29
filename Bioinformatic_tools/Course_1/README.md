@@ -561,7 +561,7 @@ Next, we use an online tool to help us visualize the different sequences.
     
 Download the ```SARS-CoV2.genome.nucl.variants.mafft.fasta.clipkit``` to your PC. Select the file in the "File" viewer and click on "More" -> "Export"   
 
-Open the website of the alignment viewer from EMBL-EBI. Choose "DNA" as input and select your own sequence file.    
+Open the website of the [alignment viewer](https://www.ebi.ac.uk/jdispatcher/msa/mview) from EMBL-EBI. Choose "DNA" as input and select your own sequence file.    
 
 After 1' or so, you should be able to explore the alignment of the different variant sequences.    
     
