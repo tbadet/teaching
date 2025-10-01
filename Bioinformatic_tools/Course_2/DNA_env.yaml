@@ -1,0 +1,17 @@
+name: DNA_env
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.9
+  - sra-tools
+  - entrez-direct
+  - bowtie2=2.5.*
+  - samtools=1.15.*
+  - bbmap
+  - gatk4=4.6.*
+  - bcftools
+  - spades
+  - unzip
+  - openjdk=17
