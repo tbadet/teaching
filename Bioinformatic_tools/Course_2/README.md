@@ -236,7 +236,7 @@ bowtie2 -h
 ```
 
 **Indeed, read mapping comes with multiple challenges**  
-
+```
 \\\   Repetitive Sequences & Homologous Regions    ///   
 Many genomes contain **repeats** (e.g., transposable elements, rDNA arrays, low-complexity sequences).  
 Reads originating from such regions may map equally well to multiple places (multi-mapping).  
@@ -264,7 +264,7 @@ Short reads (e.g., 50 bp) have fewer unique anchors compared to long reads (e.g.
 \\\   Computational Trade-offs    ///   
 Balancing speed (billions of reads to map) vs sensitivity (finding the true best match).  
 Heuristic algorithms (e.g., BWA-MEM, Bowtie2) compromise between exact search and efficiency.  
-
+```
 
 - Mapping shold take ~10-15 minutes, use this time to go through the tutorial / questions
 ```
@@ -482,7 +482,7 @@ bcftools stats gVCF/ERR1309170.sorted.g.vcf > $isolate.highconf.stats.txt
 ```
 > This is useful to quickly check the quality and nature of your calls.
 
-
+```
 **Summary Table**
 It provides overall counts of variants in the VCF:  
 Total SNPs  
@@ -490,7 +490,9 @@ Total indels (insertions and deletions)
 Other variant types, if present  
 
 Purpose: Gives a quick overview of the dataset and whether the variant calling output looks reasonable.  
+```
 
+```
 **Ts/Tv Stratified by QUAL**  
 Ts/Tv ratio = ratio of transitions (A↔G, C↔T) to transversions (all other substitutions)  
 Stratified by QUAL: Shows how the ratio changes across different variant quality score ranges.  
@@ -499,7 +501,9 @@ Interpretation:
 High-quality variants (high QUAL) should have stable Ts/Tv ratios.  
 Low-quality variants often show abnormal ratios → may need filtering.  
 Why it matters: A normal Ts/Tv ratio is a proxy for variant call accuracy.  
+```
 
+```
 **Indel Distribution**  
 Histogram or bar plot showing number of insertions vs deletions, often stratified by size.  
 
@@ -507,7 +511,9 @@ Interpretation:
 Small indels are common; large indels are rare.  
 Excessively many large indels could indicate mapping or calling errors.  
 Why it matters: Helps assess indel calling reliability and can guide filters.  
+```
 
+```
 **Depth Distribution**  
 Shows how many variants are supported by different read depths (DP).  
 
@@ -515,7 +521,9 @@ Interpretation:
 Variants supported by very few reads → less reliable   
 Very high depth may indicate duplicated regions or mapping artifacts  
 Why it matters: Guides filtering thresholds (e.g., only keep variants with DP > 10).   
+```
 
+```
 **Substitution Types**  
 Counts of the six possible base substitutions:  
 A→C, A→G, A→T, C→G, C→T, G→T  
@@ -524,6 +532,7 @@ Often displayed as a bar plot.
 Interpretation:  
 Helps detect biases in sequencing or calling (e.g., one type of substitution overrepresented)  
 Supports checking Ts/Tv ratio consistency  
+```
 
 $\color{Green}\Large{\textbf{Q6:}}$ --> **How many SNPs were identified?**  
 
