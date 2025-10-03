@@ -6,7 +6,7 @@ $\color{Orange}\Huge{\textbf{Major aims}}$
 - Install bioinformatics software using micromamba  
 - Access the NCBI sequence database to retrieve data / sequences  
 - Align sequences and buils a phylogenetic tree
-- Visualize a mlti-sequence alignemnt and a corresponding phylogenetic tree
+- Visualize a multi-sequence alignemnt and a corresponding phylogenetic tree
 
 ---------------------------------------------------------------------------------------   
 
