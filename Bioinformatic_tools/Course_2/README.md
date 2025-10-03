@@ -224,6 +224,146 @@ PREFIX="S288C_reference"
 bowtie2-build --threads 2 $REF $PREFIX
 ```
 
+**You are now ready to map your clean DNA reads to the reference genome**  
+
+Read mapping means aligning short sequencing reads back to a known reference genome to determine their most likely origin. It is achieved by using specialized algorithms that compare each read against the reference sequence, allowing for mismatches or small gaps to account for sequencing errors or real genetic differences. This process provides the positional context of each read, which is essential for downstream analyses like variant calling or gene expression quantification.  
+
+Check all the options available for mapping using `bowtie2`, a lot of them:  
+```
+bowtie2 -h
+```
+
+**Indeed, read mapping comes with multiple challenges**  
+
+\\\   Repetitive Sequences & Homologous Regions    ///   
+Many genomes contain **repeats** (e.g., transposable elements, rDNA arrays, low-complexity sequences).  
+Reads originating from such regions may map equally well to multiple places (multi-mapping).  
+Example: a 100 bp read from an Alu element in humans may have hundreds of possible alignments.  
+
+⚠️ Solutions:  
+Report one random best location (risk of misplacement).  
+Report all possible alignments (large output, more complexity).  
+Use mapping quality (MAPQ score) to indicate confidence.  
+
+\\\   Highly Similar Genes (Paralogs / Homologs)    ///   
+Reads may come from one copy of a gene family but also align well to other highly similar copies.  
+Example: distinguishing reads from Hox genes or rRNA gene clusters is difficult.  
+
+\\\   Structural Variation & Reference Bias    ///   
+If the sequenced sample contains insertions, deletions, inversions, or duplications absent in the reference, reads from those regions may:  
+(i) Fail to map at all.  
+(ii) Map incorrectly to similar sequences elsewhere.  
+(iii) Leads to reference bias → alignments are skewed toward reference alleles.  
+
+\\\   Sequencing Errors & Quality    ///   
+Miscalled bases in reads may reduce alignment accuracy.  
+Short reads (e.g., 50 bp) have fewer unique anchors compared to long reads (e.g., 150 bp).  
+
+\\\   Computational Trade-offs    ///   
+Balancing speed (billions of reads to map) vs sensitivity (finding the true best match).  
+Heuristic algorithms (e.g., BWA-MEM, Bowtie2) compromise between exact search and efficiency.  
+
+
+- Mapping shold take ~10-15 minutes, use this time to go through the tutorial / questions
+```
+mkdir BAM
+seq_index="ERR1309170"
+ref_index="S288C_reference"
+clean_fwd_reads="BBtrim/ERR1309170_clean1.fq"
+clean_rev_reads="BBtrim/ERR1309170_clean2.fq"
+bowtie2 -p 4 --rg-id ${seq_index} --rg SM:${seq_index} -x ${ref_index} -1 ${clean_fwd_reads} -2 ${clean_rev_reads} | samtools view -@ 4 -Sb | samtools sort -@ 4 > BAM/${seq_index}.bam 
+samtools index BAM/${seq_index}.bam # this step index the BAM aligment file for time-efficient parsing  
+```
+
+**What is it doing**:  
+--rg-id and --rg SM → read group identifiers, necessary for variant calling later using GATK.  
+We align reads to the reference genome using bowtie2 and use samtools to transform the output (SAM by default) into a coordinate sorted BAM format.  
+samtools sort → sorts reads for efficient access.  
+samtools index → allows rapid region queries.  
+
+Along the BAM file you should now see a companion file to a BAM alignment file (BAI) that allows rapid random access to specific genomic regions without scanning the entire BAM file.  
+
+**Understanding SAM and BAM Files**  
+When reads are aligned to a reference genome (e.g., with Bowtie2), the output is a SAM file (Sequence Alignment/Map).  
+SAM is human-readable (plain text). 
+BAM is the compressed, binary version of SAM (faster, smaller, required for most downstream tools).  
+- How Mapping Quality is Represented  
+MAPQ (Mapping Quality) score in SAM/BAM files:  
+Encoded on a Phred scale, like base qualities.  
+Higher = more confident that the read is placed in the correct location.  
+Example:  
+MAPQ 60 → uniquely and confidently mapped.  
+MAPQ 0 → read could map to many locations equally well (multi-mapping).  
+
+$\color{Green}\Large{\textbf{Q5:}}$ --> **How many reads were mapped to the reference genome?**  
+
+
+🔎 **Exploring Alignment Files**  
+Once reads are mapped to the reference, the results are stored in a SAM (Sequence Alignment/Map) file (text-based) or its compressed binary version, BAM.  
+Let’s practice navigating and inspecting these files.  
+
+1️⃣ Use `samtools` to view the first few lines of a BAM file  
+```
+samtools view -h BAM/ERR1309170.sorted.bam | head -n 30
+```
+
+- Example BAM line:
+```
+ERR1309170.13511471	163	chrI	1	22	2S33M	=	32	96	ACCCACACCACACCCACACACCCACACACCACACC	<???DBDDDA?DD?1:+C?FBA:)8):?@@B;BFA	AS:i:66	XS:i:66	XN:i:0XM:i:0	XO:i:0	XG:i:0	NM:i:0	MD:Z:33	YS:i:56	YT:Z:CP	RG:Z:ERR1309170
+```
+
+**Fields explained**:  
+QNAME: ERR1309170.13511471 – query/read name (from FASTQ).   
+FLAG: 163 – SAM flag in decimal. Here it means:   
+Read is properly paired   
+Read is the 2nd in the pair   
+Read is mapped in the reverse strand   
+RNAME: chrI – reference sequence (chromosome I).   
+POS: 1 – 1-based leftmost mapping position on the reference.   
+MAPQ: 22 – mapping quality (confidence in correct placement).   
+CIGAR: 2S33M – alignment description: 2 bases soft-clipped, then 33 bases matched.   
+RNEXT: = – mate is on the same reference sequence.   
+PNEXT: 32 – position of the mate.   
+TLEN: 96 – observed template length (distance between mates).   
+SEQ: ACCCACACCACACCCACACACCCACACACCACACC – read sequence.   
+QUAL: <???DBDDDA?DD?1:+C?FBA:)8):?@@B;BFA – base quality scores (Phred-encoded ASCII).   
+AS:i:66 – alignment score for this read.   
+XS:i:66 – suboptimal alignment score (often for spliced aligners).   
+XN:i:0 – number of ambiguous bases.   
+XM:i:0 – number of mismatches.   
+XO:i:0 – number of gap opens.   
+XG:i:0 – number of gap extensions.   
+NM:i:0 – edit distance to the reference (0 = perfect match).   
+MD:Z:33 – string for mismatching positions; 33 means 33 matches.   
+YS:i:56 – alignment score of the mate/other end.   
+YT:Z:CP – type of read pair (CP = "concordant pair").   
+RG:Z:ERR1309170 – read group identifier.   
+
+If you want to look at the mapping statistics:
+```
+samtools flagstat BAM/ERR1309170.sorted.bam
+```
+This gives you:  
+  Total reads  
+  Mapped vs unmapped reads  
+  Properly paired reads  
+  Duplicates, secondary alignments  
+  Useful for checking alignment efficiency.  
+
+
+#### For a quick visualisation of your alignment file  
+You can use an interactive, text-based viewer in your terminal.  
+It shows the reference sequence on top and aligned reads below.  
+```
+samtools tview BAM/${i2}.bam $REF
+```
+
+Mismatches are highlighted by their corresponding base ("." are matching bases on the forward strand, "," no the reverse strand).  
+🔧 Useful controls inside tview:  
+Arrow keys → navigate left/right/up/down  
+g → go to a specific position (e.g., chr1:1000)  
+q → quit viewer  
+? → list all commands and options  
 
 
 
