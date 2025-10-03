@@ -43,7 +43,7 @@ Ask chatGPT (or similar) to write code for you. Does it work? For fairly simple 
 
 #### (1) Install dedicated softwares  
 
-The first step in a bioinformatics project often includes installing software. Past week we learned how to create a dedicated environment using ```micromamba```. Using environments avoids version conflicts and ensures reproducibility across systems.  
+> The first step in a bioinformatics project often includes installing software. Past week we learned how to create a dedicated environment using ```micromamba```. Using environments avoids version conflicts and ensures reproducibility across systems.  
 
 Using `wget` you can download a file with a list of softwares needed for today's exercice:   
 
@@ -69,7 +69,7 @@ micromamba activate DNA_env
 
 #### (2) Retrieve datasets  
 
-Previous weeks you've seen how to access genome sequences from the NCBI database. Raw sequecing data can also be retrieved in a similar way.  
+> Previous weeks you've seen how to access genome sequences from the NCBI database. Raw sequecing data can also be retrieved in a similar way.  
 
 **Here is the link to a file containing metadata for a set of sequencing experiments**  
 ```
@@ -124,7 +124,7 @@ $\color{Green}\Large{\textbf{Q2:}}$ --> **How many forward reads were sequenced?
 
 #### (3) Pre-processing the raw data  
 
-First step when retrieving raw sequencing reads, we need to perform **quality checks** to assess read length, base quality scores, GC content, and potential contaminants or biases.   
+> First step when retrieving raw sequencing reads, we need to perform **quality checks** to assess read length, base quality scores, GC content, and potential contaminants or biases.   
 
 - Based on this, we apply `trimming`, which means removing low-quality bases, sequencing adapters, and unreliable read segments. This ensures that only high-confidence, clean reads are carried forward, improving the accuracy of downstream analyses such as genome assembly or variant calling.
 
@@ -156,6 +156,7 @@ bbduk.sh threads=4 -Xmx20g in1=${i1} out1=BBtrim/${i1%.fastq.gz}_clean1.fq in2=$
 ```
 
 **Options explained**:  
+```
 ref=truseq.fa.gz → the Illumina TruSeq adapters sequences to trim  
 ktrim=r → trim adapters from read ends.  
 k=23 mink=11 → k-mer size for matching adapter sequences.  
@@ -163,6 +164,7 @@ hdist=1 → allow 1 mismatch in k-mer match.
 tpe tbo → trim both reads in a pair consistently.  
 qtrim=r trimq=10 → remove low-quality bases from the right end.  
 minlength=20 → discard too-short reads.  
+```
 
 $\color{Green}\Large{\textbf{Q3:}}$ --> **How many reads were dropped in total during trimming?**  
 
@@ -170,7 +172,7 @@ $\color{Green}\Large{\textbf{Q3:}}$ --> **How many reads were dropped in total d
 
 #### (4) Mapping reads to a reference genome  
 
-After trimming, we map the cleaned reads to a reference genome so we know where each read originates in the genome and can study genetic variation (DNA) [note at this stage that studying gene expression (RNA) relies on similar approaches].  
+> After trimming, we map the cleaned reads to a reference genome so we know where each read originates in the genome and can study genetic variation (DNA) [note at this stage that studying gene expression (RNA) relies on similar approaches].  
 
 So in this context, to identify variants we first need to map reads to a `reference genome`, but **What is a Reference Genome?**  
 
@@ -226,7 +228,7 @@ bowtie2-build --threads 2 $REF $PREFIX
 
 **You are now ready to map your clean DNA reads to the reference genome**  
 
-Read mapping means aligning short sequencing reads back to a known reference genome to determine their most likely origin. It is achieved by using specialized algorithms that compare each read against the reference sequence, allowing for mismatches or small gaps to account for sequencing errors or real genetic differences. This process provides the positional context of each read, which is essential for downstream analyses like variant calling (or gene expression quantification).  
+> Read mapping means aligning short sequencing reads back to a known reference genome to determine their most likely origin. It is achieved by using specialized algorithms that compare each read against the reference sequence, allowing for mismatches or small gaps to account for sequencing errors or real genetic differences. This process provides the positional context of each read, which is essential for downstream analyses like variant calling (or gene expression quantification).  
 
 Check all the options available for mapping using `bowtie2`, a lot of them:  
 ```
@@ -313,6 +315,7 @@ ERR1309170.13511471	163	chrI	1	22	2S33M	=	32	96	ACCCACACCACACCCACACACCCACACACCAC
 ```
 
 **Fields explained**:  
+```
 QNAME: ERR1309170.13511471 – query/read name (from FASTQ).   
 FLAG: 163 – SAM flag in decimal. Here it means:   
 Read is properly paired   
@@ -338,12 +341,14 @@ MD:Z:33 – string for mismatching positions; 33 means 33 matches.
 YS:i:56 – alignment score of the mate/other end.   
 YT:Z:CP – type of read pair (CP = "concordant pair").   
 RG:Z:ERR1309170 – read group identifier.   
+```
 
 If you want to look at the mapping statistics:
 ```
 samtools flagstat BAM/ERR1309170.sorted.bam
 ```
-This gives you:  
+
+> This gives you:  
   Total reads  
   Mapped vs unmapped reads  
   Properly paired reads  
@@ -358,7 +363,7 @@ It shows the reference sequence on top and aligned reads below.
 samtools tview BAM/${i2}.bam $REF
 ```
 
-Mismatches are highlighted by their corresponding base ("." are matching bases on the forward strand, "," no the reverse strand).  
+> Mismatches are highlighted by their corresponding base ("." are matching bases on the forward strand, "," no the reverse strand).  
 🔧 Useful controls inside tview:  
 Arrow keys → navigate left/right/up/down  
 g → go to a specific position (e.g., chr1:1000)  
@@ -369,7 +374,7 @@ q → quit viewer
 
 #### (5) Identifying genomic variants     
 
-As you may have observed while inspecting your alignments with samtools tview, many reads are confidently mapped to the reference genome but exhibit differences at one or more nucleotides. The next step is to automate the detection of these variations—known as variant calling—while retaining information about their genomic positions, the type of variation (e.g., SNPs or indels), and the associated confidence scores, which are informed by factors such as mapping quality and the number of supporting reads. This allows us to systematically identify genomic differences across samples for downstream analyses.  
+> As you may have observed while inspecting your alignments with samtools tview, many reads are confidently mapped to the reference genome but exhibit differences at one or more nucleotides. The next step is to automate the detection of these variations—known as variant calling—while retaining information about their genomic positions, the type of variation (e.g., SNPs or indels), and the associated confidence scores, which are informed by factors such as mapping quality and the number of supporting reads. This allows us to systematically identify genomic differences across samples for downstream analyses.  
 
 - First step, as for mapping, is to create an index (dictionary) for the software to efficiently navigate our genome. We'll use the Genome Analysis Toolkit (GATK), a widely used software suite developed by the Broad Institute for analyzing high-throughput sequencing data. It provides robust tools for variant discovery and genotyping, including single nucleotide polymorphisms (SNPs) and insertions/deletions (indels), while accounting for sequencing errors, mapping quality, and other sources of uncertainty.
 
@@ -380,7 +385,7 @@ gatk CreateSequenceDictionary --REFERENCE $REF
 
 **Variant Calling with HaplotypeCaller**  
 
-HaplotypeCaller does not just scan mismatches; it performs local de novo assembly of haplotypes in regions of variation, making it more accurate than naive pileup methods.  
+> HaplotypeCaller does not just scan mismatches; it performs local de novo assembly of haplotypes in regions of variation, making it more accurate than naive pileup methods.  
 
 This will produce gVCF file, which stands for Genomic Variant Call Format.  
 It is an extension of VCF designed to capture not only variant sites (SNPs, indels, etc.) but also non-variant regions where the sequencer agrees with the reference.  
@@ -419,10 +424,9 @@ You can have a look at the resulting variant file:
 nano gVCF/ERR1309170.sorted.g.vcf
 ```
 
-Visit [this](https://gatk.broadinstitute.org/hc/en-us/articles/360035531812-GVCF-Genomic-Variant-Call-Format) page to get an idea oh how to `read` this file.  
+- Visit [this](https://gatk.broadinstitute.org/hc/en-us/articles/360035531812-GVCF-Genomic-Variant-Call-Format) page to get an idea oh how to `read` this file.  
 
-
-- Since we're only looking at one strain, we could simply genotype this file, but let's proceed with the combine+genotyping steps (usually multiple samples are treated, and we nned recapitulates all the information into a single variant file).  
+> Since we're only looking at one strain, we could simply genotype this file, but let's proceed with the combine+genotyping steps (usually multiple samples are treated, and we nned recapitulates all the information into a single variant file).  
 
 Assuming you have multiple gVCF calls from the same species and against the same reference genome, you first need to combine them:  
 - for that you'll need to provide the reference genome and the list of gVCF files:  
@@ -445,8 +449,7 @@ gatk --java-options "-Xmx20g" GenotypeGVCFs \
     -O VCF/$seq_id.vcf
 ```
 
-The resulting VCF file describes genetic variants found by comparing sequencing data to the reference genome. It records SNPs, insertions, deletions, and other mutations.  
-`File extension: .vcf`  
+> The resulting VCF file describes genetic variants found by comparing sequencing data to the reference genome. It records SNPs, insertions, deletions, and other mutations.  
 
 Structure (tab-delimited, 8+ columns):  
 ```
@@ -472,10 +475,13 @@ FORMAT/SAMPLES → genotypes and sample-specific metrics (in multi-sample VCFs)
 **This is typically the file used for downstream analysis such as population genetics.**    
 
 To know more about the variation statisitcs, `bcftools stats` gives a summary of the variants in your VCF file.  
-This is useful to quickly check the quality and nature of your calls.  
+
+
 ```
 bcftools stats gVCF/ERR1309170.sorted.g.vcf > $isolate.highconf.stats.txt
 ```
+> This is useful to quickly check the quality and nature of your calls.
+
 
 **Summary Table**
 It provides overall counts of variants in the VCF:  
@@ -525,7 +531,7 @@ $\color{Green}\Large{\textbf{Q6:}}$ --> **How many SNPs were identified?**
 
 #### (5) Filtering the set of identified genomic variants     
 
-- After variant calling, the resulting VCF file typically contains all sites where differences from the reference were detected, but not all of them represent true biological variants. Many can be artifacts introduced by sequencing errors, low coverage, poor read mapping, or ambiguous regions of the genome. VCF filtering is the step where we apply quality thresholds (e.g. minimum read depth, mapping quality, allele balance, or variant quality score) to remove unreliable calls. This is important because downstream analyses—such as studying population structure, genotype-phenotype associations, or evolutionary patterns—depend on accurate variants. Without filtering, spurious variants could bias results and lead to incorrect biological interpretations.   
+> After variant calling, the resulting VCF file typically contains all sites where differences from the reference were detected, but not all of them represent true biological variants. Many can be artifacts introduced by sequencing errors, low coverage, poor read mapping, or ambiguous regions of the genome. VCF filtering is the step where we apply quality thresholds (e.g. minimum read depth, mapping quality, allele balance, or variant quality score) to remove unreliable calls. This is important because downstream analyses—such as studying population structure, genotype-phenotype associations, or evolutionary patterns—depend on accurate variants. Without filtering, spurious variants could bias results and lead to incorrect biological interpretations.   
 
 For that we'll use a commonly used software called `bcftools`:  
 ```
@@ -535,7 +541,7 @@ bcftools filter -s LOWQUAL \
    VCF/$seq_id.vcf -Oz -o VCF/$seq_id.highconf.vcf.gz
 ```
 
-That command filters the inital VCF file to keep only high-confidence variants (QUAL phred-scaled confidence > 30, read depth > 10, mapping quality > 40), labels variants failing these thresholds as LOWQUAL, and outputs the result as a compressed VCF (.vcf.gz).
+The command filters the inital VCF file to keep only high-confidence variants (QUAL phred-scaled confidence > 30, read depth > 10, mapping quality > 40), labels variants failing these thresholds as LOWQUAL, and outputs the result as a compressed VCF (.vcf.gz).
 
 - Note that you probably want to adjust thresholds depending on your sequencing depth and dataset.   
 
@@ -553,7 +559,7 @@ micromamba install matplotlib
 plot-vcfstats -p plots $isolate.highconf.stats.txt
 ```
 
-Now check the plots/summary.pdf file.  
+> Now check the plots/summary.pdf file.  
 
 -------------------------------------------------------------------------------------------------------
 
@@ -588,7 +594,7 @@ Investigate how it compares to the reference genome assembly used for read mappi
 More or less contigs?  
 How does the total genome size compares?  
 
->> Illustrates the difficulties in assemblies full chromosomes (even for species with relatively small genomes and low repeat content)
+> Illustrates the difficulties in assemblies full chromosomes (even for species with relatively small genomes and low repeat content)
 
 
 -----------------------------------------------------------------------------------------------
