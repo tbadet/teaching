@@ -199,7 +199,7 @@ You should now see a `S288C_reference_genome_R64-5-1_20240529` folder with insid
 zgrep ">" S288C_reference_genome_R64-5-1_20240529/S288C_reference_sequence_R64-5-1_20240529.fsa.gz
 ```
 
-- Optionally, we simplify the header of each sequence (here full chromosomes):
+- Optionally, we can simplify the header of each fasta sequence (here full chromosomes):
 ```
 zcat S288C_reference_genome_R64-5-1_20240529/S288C_reference_sequence_R64-5-1_20240529.fsa.gz | perl -pe 's/>.*chromosome=/>chr/' | tr -d ']' | perl -pe 's/>ref.*/>chrmt/' > S288C_reference_sequence_R64-5-1_20240529.fna
 ```
@@ -213,7 +213,16 @@ $\color{Green}\Large{\textbf{Q4:}}$ --> **How many chromosomes does the S288C as
 Note that `mt` often stands for Mitochondria
 
 
-Because the genome can be very large, we index it first: this creates a searchable data structure that allows aligners to quickly find where each read might match, instead of scanning the entire genome base by base.     
+**Now, prior to read mapping, we need to `index` our reference genome. Why?**   
+
+Because the genome can be very large, and mapping algorithms (we'll use `bowtie2`) need a preprocessed data structure to quickly find read alignments. Often genome indexes stores all k-mers of the genome to create a searchable data structure that allows aligners to quickly find where each read might match, instead of scanning the entire genome base by base.     
+
+This is done with:  
+```
+REF="S288C_reference_sequence_R64-5-1_20240529.fna"
+PREFIX="S288C_reference"
+bowtie2-build --threads 2 $REF $PREFIX
+```
 
 
 
