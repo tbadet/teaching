@@ -1,6 +1,6 @@
-# 🧬 DNA Sequencing Data Analysis: Read Mapping & Genome Assembly
+# 🧬 DNA Sequencing Data Analysis: Read Mapping   
 
-This tutorial guides you through a **DNA sequencing analysis workflow**, from raw reads to variant calling and de novo genome assembly.
+> This tutorial guides you through a **DNA sequencing analysis workflow**, from raw reads to variant calling and de novo genome assembly.
 
 
 Mapping sequencing reads to a reference genome and calling variants is a central method in modern biology for understanding genetic differences and their functional consequences. By aligning raw reads to a reference, researchers can pinpoint where in the genome each fragment originates, which allows the detection of single nucleotide variants, insertions, deletions, and larger structural changes. This approach is useful in many contexts, from identifying mutations linked to diseases, to studying genetic diversity in populations, to exploring evolutionary relationships between species. Once variants are identified, they can be connected to phenotypes, adaptive traits, or molecular mechanisms, making this pipeline a foundation for both basic research and applied genomics.
