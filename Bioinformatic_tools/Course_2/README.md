@@ -605,5 +605,8 @@ How does the total genome size compares?
 
 > Illustrates the difficulties in assemblies full chromosomes (even for species with relatively small genomes and low repeat content)
 
+**Why assemblies are useful**  
+👉 Using the generated scaffolds, you can start looking for genes (i.e. coding sequences), and infer RNA/protein sequences.  
+
 
 -----------------------------------------------------------------------------------------------
