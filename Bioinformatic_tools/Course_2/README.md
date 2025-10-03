@@ -226,7 +226,7 @@ bowtie2-build --threads 2 $REF $PREFIX
 
 **You are now ready to map your clean DNA reads to the reference genome**  
 
-Read mapping means aligning short sequencing reads back to a known reference genome to determine their most likely origin. It is achieved by using specialized algorithms that compare each read against the reference sequence, allowing for mismatches or small gaps to account for sequencing errors or real genetic differences. This process provides the positional context of each read, which is essential for downstream analyses like variant calling or gene expression quantification.  
+Read mapping means aligning short sequencing reads back to a known reference genome to determine their most likely origin. It is achieved by using specialized algorithms that compare each read against the reference sequence, allowing for mismatches or small gaps to account for sequencing errors or real genetic differences. This process provides the positional context of each read, which is essential for downstream analyses like variant calling (or gene expression quantification).  
 
 Check all the options available for mapping using `bowtie2`, a lot of them:  
 ```
@@ -365,5 +365,230 @@ g → go to a specific position (e.g., chr1:1000)
 q → quit viewer  
 ? → list all commands and options  
 
+---------------------------------------------------------------------------------------   
+
+#### (5) Identifying genomic variants     
+
+As you may have observed while inspecting your alignments with samtools tview, many reads are confidently mapped to the reference genome but exhibit differences at one or more nucleotides. The next step is to automate the detection of these variations—known as variant calling—while retaining information about their genomic positions, the type of variation (e.g., SNPs or indels), and the associated confidence scores, which are informed by factors such as mapping quality and the number of supporting reads. This allows us to systematically identify genomic differences across samples for downstream analyses.  
+
+- First step, as for mapping, is to create an index (dictionary) for the software to efficiently navigate our genome. We'll use the Genome Analysis Toolkit (GATK), a widely used software suite developed by the Broad Institute for analyzing high-throughput sequencing data. It provides robust tools for variant discovery and genotyping, including single nucleotide polymorphisms (SNPs) and insertions/deletions (indels), while accounting for sequencing errors, mapping quality, and other sources of uncertainty.
+
+```
+REF="S288C_reference_sequence_R64-5-1_20240529.fna"
+gatk CreateSequenceDictionary --REFERENCE $REF
+```
+
+**Variant Calling with HaplotypeCaller**  
+
+HaplotypeCaller does not just scan mismatches; it performs local de novo assembly of haplotypes in regions of variation, making it more accurate than naive pileup methods.  
+
+This will produce gVCF file, which stands for Genomic Variant Call Format.  
+It is an extension of VCF designed to capture not only variant sites (SNPs, indels, etc.) but also non-variant regions where the sequencer agrees with the reference.  
+This is crucial in large-scale studies: it lets you merge data from many samples consistently, even at sites where most samples don’t vary.  
+👉 Regular VCF: reports only variant positions.  
+👉 gVCF: reports both variant and non-variant positions, with confidence scores.  
+
+**Why gVCF is useful**  
+Imagine you want to compare 100 yeast isolates.  
+If you only output variants, one isolate may have no SNP at position 1200, so it won’t show up in its VCF, while another isolate may have a SNP at that position.
+To merge all isolates into a joint genotyping step, you need a format that records every site assessed in every sample. That’s what the gVCF provides.  
+
+To make it faster, you'll call variants on a chromosome of your choice. To check the list of chromosome you can do:  
+```
+REF="S288C_reference_sequence_R64-5-1_20240529.fna"
+samtools faidx $REF
+cat $REF.fai | cut -f1
+```
+
+- then you can define the chromosome, create an output directory and specify your input alignment file and output file:  
+Note that we set -ploidy 1: indeed, `Saccharomyces cerevisiae` is haploid, so each position should have only one allele. Setting this prevents false heterozygous calls.  
+```
+chr="chrI"
+mkdir gVCF
+seq_id=$( ls BAM/*.bam | perl -pe 's/BAM\///' | perl -pe 's/.bam//' )
+i=$( ls BAM/*.bam )
+gVCFfile=gVCF/${seq_id}_${chr}.g.vcf
+BAM=$( ls BAM/*.bam )
+gatk HaplotypeCaller -R $REF -L $chr -ploidy 1 \
+-I $BAM --native-pair-hmm-threads 4 --emit-ref-confidence GVCF \
+-O $gVCFfile
+```
+
+You can have a look at the resulting variant file:
+```
+nano gVCF/ERR1309170.sorted.g.vcf
+```
+
+Visit [this](https://gatk.broadinstitute.org/hc/en-us/articles/360035531812-GVCF-Genomic-Variant-Call-Format) page to get an idea oh how to `read` this file.  
 
 
+- Since we're only looking at one strain, we could simply genotype this file, but let's proceed with the combine+genotyping steps (usually multiple samples are treated, and we nned recapitulates all the information into a single variant file).  
+
+Assuming you have multiple gVCF calls from the same species and against the same reference genome, you first need to combine them:  
+- for that you'll need to provide the reference genome and the list of gVCF files:  
+```
+REF="S288C_reference_sequence_R64-5-1_20240529.fna"
+ls gVCF/*.g.vcf > gvcf.list 
+gatk CombineGVCFs -R $REF \
+-V gvcf.list  \
+-O gVCF/combined.g.vcf
+```
+     
+Once all gVCF combined into one single file, you need to `genotype` consistently all variants across all samples:
+
+```
+mkdir VCF
+seq_id=$( ls BAM/*.bam | perl -pe 's/BAM\///' | perl -pe 's/.bam//' )
+gatk --java-options "-Xmx20g" GenotypeGVCFs \
+    -R $REF \
+    -V combined.g.vcf \
+    -O VCF/$seq_id.vcf
+```
+
+The resulting VCF file describes genetic variants found by comparing sequencing data to the reference genome. It records SNPs, insertions, deletions, and other mutations.  
+`File extension: .vcf`  
+
+Structure (tab-delimited, 8+ columns):  
+```
+#CHROM   POS     ID   REF   ALT   QUAL   FILTER   INFO  
+chrI     2102    .    A     G     99     PASS     DP=35;MQ=60  
+chrI     3127    .    T     C     85     PASS     DP=42;MQ=59  
+```
+
+```
+CHROM → chromosome name (chrI)  
+POS → position of variant (1-based)  
+ID → dbSNP or other known variant ID (if available, else .)  
+REF → reference base(s)  
+ALT → alternate allele(s) observed in sample  
+QUAL → phred-scaled confidence in the variant call  
+FILTER → PASS (high-quality) or reason for filtering  
+INFO → extra annotations (e.g., DP = depth, MQ = mapping quality)  
+FORMAT/SAMPLES → genotypes and sample-specific metrics (in multi-sample VCFs)  
+```
+
+👉 Why it matters: The VCF is the final product of variant calling pipelines — it’s the file you interpret biologically (e.g., "Which SNPs distinguish this isolate?").  
+
+**This is typically the file used for downstream analysis such as population genetics.**    
+
+To know more about the variation statisitcs, `bcftools stats` gives a summary of the variants in your VCF file.  
+This is useful to quickly check the quality and nature of your calls.  
+```
+bcftools stats gVCF/ERR1309170.sorted.g.vcf > $isolate.highconf.stats.txt
+```
+
+**Summary Table**
+It provides overall counts of variants in the VCF:  
+Total SNPs  
+Total indels (insertions and deletions)  
+Other variant types, if present  
+
+Purpose: Gives a quick overview of the dataset and whether the variant calling output looks reasonable.  
+
+**Ts/Tv Stratified by QUAL**  
+Ts/Tv ratio = ratio of transitions (A↔G, C↔T) to transversions (all other substitutions)  
+Stratified by QUAL: Shows how the ratio changes across different variant quality score ranges.  
+
+Interpretation:  
+High-quality variants (high QUAL) should have stable Ts/Tv ratios.  
+Low-quality variants often show abnormal ratios → may need filtering.  
+Why it matters: A normal Ts/Tv ratio is a proxy for variant call accuracy.  
+
+**Indel Distribution**  
+Histogram or bar plot showing number of insertions vs deletions, often stratified by size.  
+
+Interpretation:  
+Small indels are common; large indels are rare.  
+Excessively many large indels could indicate mapping or calling errors.  
+Why it matters: Helps assess indel calling reliability and can guide filters.  
+
+**Depth Distribution**  
+Shows how many variants are supported by different read depths (DP).  
+
+Interpretation:  
+Variants supported by very few reads → less reliable   
+Very high depth may indicate duplicated regions or mapping artifacts  
+Why it matters: Guides filtering thresholds (e.g., only keep variants with DP > 10).   
+
+**Substitution Types**  
+Counts of the six possible base substitutions:  
+A→C, A→G, A→T, C→G, C→T, G→T  
+Often displayed as a bar plot.  
+
+Interpretation:  
+Helps detect biases in sequencing or calling (e.g., one type of substitution overrepresented)  
+Supports checking Ts/Tv ratio consistency  
+
+$\color{Green}\Large{\textbf{Q6:}}$ --> **How many SNPs were identified?**  
+
+-----------------------------------------------------------------------------------------------------------------------------
+
+#### (5) Filtering the set of identified genomic variants     
+
+- After variant calling, the resulting VCF file typically contains all sites where differences from the reference were detected, but not all of them represent true biological variants. Many can be artifacts introduced by sequencing errors, low coverage, poor read mapping, or ambiguous regions of the genome. VCF filtering is the step where we apply quality thresholds (e.g. minimum read depth, mapping quality, allele balance, or variant quality score) to remove unreliable calls. This is important because downstream analyses—such as studying population structure, genotype-phenotype associations, or evolutionary patterns—depend on accurate variants. Without filtering, spurious variants could bias results and lead to incorrect biological interpretations.   
+
+For that we'll use a commonly used software called `bcftools`:  
+```
+seq_id=$( ls BAM/*.bam | perl -pe 's/BAM\///' | perl -pe 's/.bam//' )
+bcftools filter -s LOWQUAL \
+   -i 'QUAL > 30 && FMT/DP > 10 && MQ > 40' \
+   VCF/$seq_id.vcf -Oz -o VCF/$seq_id.highconf.vcf.gz
+```
+
+That command filters the inital VCF file to keep only high-confidence variants (QUAL phred-scaled confidence > 30, read depth > 10, mapping quality > 40), labels variants failing these thresholds as LOWQUAL, and outputs the result as a compressed VCF (.vcf.gz).
+
+- Note that you probably want to adjust thresholds depending on your sequencing depth and dataset.   
+
+If you want to know more about the variation statisitcs, `bcftools stats` gives a summary of the variants in your VCF file.  
+This is useful to quickly check the quality and nature of your calls.  
+```
+bcftools stats VCF/$isolate.highconf.vcf.gz > $isolate.highconf.stats.txt
+```
+
+$\color{Green}\Large{\textbf{Q7:}}$ --> **How many SNPs were dropped in the filtering process?**  
+
+If you want to `visualize` the same statistics, you can do:  
+```
+micromamba install matplotlib
+plot-vcfstats -p plots $isolate.highconf.stats.txt
+```
+
+Now check the plots/summary.pdf file.  
+
+-------------------------------------------------------------------------------------------------------
+
+#### (bonus) `de novo` genome assembly from sequencing reads  
+
+- For those of you that may have finished with the previous steps before the end of the course, you can try to `de novo` assemble this yeast genome using the same clean, paired-end reads used for variant calling. 
+
+For that you'll be using `SPAdes`. SPAdes (St. Petersburg genome assembler) is a popular tool for de novo genome assembly from short-read sequencing data. It is particularly well-suited for paired-end Illumina reads and uses a de Bruijn graph–based approach with sophisticated error correction to reconstruct contiguous genome sequences (contigs). For more information about the tools you can visit their github [page](https://ablab.github.io/spades/).  
+
+You only need your clean, trimmed set of reads generated ahead (the assembly should take ~10min):  
+```
+clean_fwd_reads="BBtrim/ERR1309170_clean1.fq"
+clean_rev_reads="BBtrim/ERR1309170_clean2.fq"
+seq_id="ERR1309170"
+spades.py --only-assembler -t 16 -m 252 --isolate --tmp-dir /scratch/ -o ${seq_id}_SpadesAssembly -1 $clean_fwd_reads -2 $clean_rev_reads
+```
+
+Some of the main output files include:  
+- contigs.fasta – FASTA file containing the assembled contigs. **These are contiguous sequences without gaps; often the main file you’ll analyze.**  
+- scaffolds.fasta – FASTA file containing scaffolds, which are contigs joined together with estimated gaps (usually represented by Ns). Generally more contiguous than contigs.fasta.  
+- spades.log – Detailed log file of the run, including steps performed and parameters used.  
+- params.txt – The exact parameters used by SPAdes.  
+- dataset.info / input_dataset.yaml – Metadata about your input reads and datasets.  
+- K21, K33, K55 – Directories containing intermediate assemblies for different k-mer sizes tested during the run.  
+
+**Investigate the resulting files.**  
+
+$\color{Green}\Large{\textbf{QBonus:}}$ --> **How many scaffolds were assembled during genome assembly?**  
+
+Investigate how it compares to the reference genome assembly used for read mapping earlier.  
+
+More or less contigs?  
+How does the total genome size compares?  
+
+>> Illustrates the difficulties in assemblies full chromosomes (even for species with relatively small genomes and low repeat content)
+
+
+-----------------------------------------------------------------------------------------------
