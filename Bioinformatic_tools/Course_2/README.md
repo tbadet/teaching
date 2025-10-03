@@ -1,4 +1,4 @@
-## 🧬 DNA Sequencing Data Analysis: Read Mapping & Genome Assembly
+# 🧬 DNA Sequencing Data Analysis: Read Mapping & Genome Assembly
 
 This tutorial guides you through a **DNA sequencing analysis workflow**, from raw reads to variant calling and de novo genome assembly.
 
@@ -41,7 +41,7 @@ Ask chatGPT (or similar) to write code for you. Does it work? For fairly simple 
 
 ---------------------------------------------------------------------------------------   
 
-#### (1) Install dedicated softwares  
+## (1) Install dedicated softwares  
 
 > The first step in a bioinformatics project often includes installing software. Past week we learned how to create a dedicated environment using ```micromamba```. Using environments avoids version conflicts and ensures reproducibility across systems.  
 
@@ -67,7 +67,7 @@ micromamba activate DNA_env
 
 ---------------------------------------------------------------------------------------   
 
-#### (2) Retrieve datasets  
+## (2) Retrieve datasets  
 
 > Previous weeks you've seen how to access genome sequences from the NCBI database. Raw sequecing data can also be retrieved in a similar way.  
 
@@ -122,7 +122,7 @@ $\color{Green}\Large{\textbf{Q2:}}$ --> **How many forward reads were sequenced?
 
 ---------------------------------------------------------------------------------------   
 
-#### (3) Pre-processing the raw data  
+## (3) Pre-processing the raw data  
 
 > First step when retrieving raw sequencing reads, we need to perform **quality checks** to assess read length, base quality scores, GC content, and potential contaminants or biases.   
 
@@ -170,7 +170,7 @@ $\color{Green}\Large{\textbf{Q3:}}$ --> **How many reads were dropped in total d
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-#### (4) Mapping reads to a reference genome  
+## (4) Mapping reads to a reference genome  
 
 > After trimming, we map the cleaned reads to a reference genome so we know where each read originates in the genome and can study genetic variation (DNA) [note at this stage that studying gene expression (RNA) relies on similar approaches].  
 
@@ -356,7 +356,7 @@ samtools flagstat BAM/ERR1309170.sorted.bam
   Useful for checking alignment efficiency.  
 
 
-#### For a quick visualisation of your alignment file  
+### For a quick visualisation of your alignment file  
 You can use an interactive, text-based viewer in your terminal.  
 It shows the reference sequence on top and aligned reads below.  
 ```
@@ -372,7 +372,7 @@ q → quit viewer
 
 ---------------------------------------------------------------------------------------   
 
-#### (5) Identifying genomic variants     
+## (5) Identifying genomic variants     
 
 > As you may have observed while inspecting your alignments with samtools tview, many reads are confidently mapped to the reference genome but exhibit differences at one or more nucleotides. The next step is to automate the detection of these variations—known as variant calling—while retaining information about their genomic positions, the type of variation (e.g., SNPs or indels), and the associated confidence scores, which are informed by factors such as mapping quality and the number of supporting reads. This allows us to systematically identify genomic differences across samples for downstream analyses.  
 
@@ -538,7 +538,7 @@ $\color{Green}\Large{\textbf{Q6:}}$ --> **How many SNPs were identified?**
 
 -----------------------------------------------------------------------------------------------------------------------------
 
-#### (5) Filtering the set of identified genomic variants     
+## (5) Filtering the set of identified genomic variants     
 
 > After variant calling, the resulting VCF file typically contains all sites where differences from the reference were detected, but not all of them represent true biological variants. Many can be artifacts introduced by sequencing errors, low coverage, poor read mapping, or ambiguous regions of the genome. VCF filtering is the step where we apply quality thresholds (e.g. minimum read depth, mapping quality, allele balance, or variant quality score) to remove unreliable calls. This is important because downstream analyses—such as studying population structure, genotype-phenotype associations, or evolutionary patterns—depend on accurate variants. Without filtering, spurious variants could bias results and lead to incorrect biological interpretations.   
 
@@ -572,7 +572,7 @@ plot-vcfstats -p plots $isolate.highconf.stats.txt
 
 -------------------------------------------------------------------------------------------------------
 
-#### (bonus) `de novo` genome assembly from sequencing reads  
+## (bonus) `de novo` genome assembly from sequencing reads  
 
 - For those of you that may have finished with the previous steps before the end of the course, you can try to `de novo` assemble this yeast genome using the same clean, paired-end reads used for variant calling. 
 
