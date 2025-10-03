@@ -2,6 +2,9 @@
 
 This tutorial guides you through a **DNA sequencing analysis workflow**, from raw reads to variant calling and de novo genome assembly.
 
+
+Mapping sequencing reads to a reference genome and calling variants is a central method in modern biology for understanding genetic differences and their functional consequences. By aligning raw reads to a reference, researchers can pinpoint where in the genome each fragment originates, which allows the detection of single nucleotide variants, insertions, deletions, and larger structural changes. This approach is useful in many contexts, from identifying mutations linked to diseases, to studying genetic diversity in populations, to exploring evolutionary relationships between species. Once variants are identified, they can be connected to phenotypes, adaptive traits, or molecular mechanisms, making this pipeline a foundation for both basic research and applied genomics.
+
 ---
 
 $\color{Orange}\Huge{\textbf{Major aims}}$
@@ -112,12 +115,106 @@ zcat ERR1309170_1.fastq.gz | head
 A `FASTQ` file stores raw sequencing reads, with each read represented by four lines: a **header** line (beginning with @ and containing instrument ID, run ID, lane, tile, X/Y coordinates, read number, filter status, and barcode), a **sequence** line (nucleotide bases), a **separator** line (+, optionally repeating the header), and a **quality** line (ASCII characters encoding Phred quality scores, where each character’s ASCII code equals the quality value + 33, with higher scores indicating greater confidence in the base call, according to Q = −10 × log₁₀(Perror)).
 
 What do you think of the sequencing quality of your reads?
-- see table (at)[https://support.illumina.com/help/BaseSpace_Sequence_Hub_OLH_009008_2/Source/Informatics/BS/QualityScoreEncoding_swBS.htm] for more information on how to interpret ASCII code  
+- see table [here](https://support.illumina.com/help/BaseSpace_Sequence_Hub_OLH_009008_2/Source/Informatics/BS/QualityScoreEncoding_swBS.htm) for more information on how to interpret ASCII code.   
 
 $\color{Green}\Large{\textbf{Q2:}}$ --> **How many forward reads were sequenced? how many reverse?**  
-**Qtip**: `zgrep` allows you to search inside zipped files without having to uncompress them  
+**Qtip**: `zgrep` allows you to search inside zipped files without having to uncompress them.  
 
 ---------------------------------------------------------------------------------------   
+
+#### (3) Pre-processing the raw data  
+
+First step when retrieving raw sequencing reads, we need to perform **quality checks** to assess read length, base quality scores, GC content, and potential contaminants or biases.   
+
+- Based on this, we apply `trimming`, which means removing low-quality bases, sequencing adapters, and unreliable read segments. This ensures that only high-confidence, clean reads are carried forward, improving the accuracy of downstream analyses such as genome assembly or variant calling.
+
+Download the Illumina adapter sequences for trimming:  
+```
+wget https://github.com/tbadet/teaching/raw/refs/heads/main/Bioinformatic_tools/Course_2/truseq.fa.gz
+```
+
+Make a new directory where to stored the trimmed reads:  
+```
+mkdir BBtrim
+```
+
+For trimming, we'll use the BBduck software, which combines most common data-quality-related trimming, filtering, and masking operations into a single high-performance tool.  
+
+Define ahead the name of input and output files:  
+
+```
+i1="ERR1309170_1.fastq.gz"
+i2="ERR1309170_2.fastq.gz"
+o1="${i1%.fastq.gz}_clean2.fq" # here `%` inside the variable brackets allows to remove a pattern from the end (suffix removal)
+o2="${i2%.fastq.gz}_clean2.fq" 
+```
+Tip: When using / defining variables, always check the result with `echo`  
+
+**Now you are ready to trim**:  
+```
+bbduk.sh threads=4 -Xmx20g in1=${i1} out1=BBtrim/${i1%.fastq.gz}_clean1.fq in2=${i2} out2=BBtrim/${i2%.fastq.gz}_clean2.fq ref=truseq.fa.gz ktrim=r k=23 mink=11 hdist=1 tpe tbo qtrim=r trimq=10 minlength=20  
+```
+
+**Options explained**:  
+ref=truseq.fa.gz → the Illumina TruSeq adapters sequences to trim  
+ktrim=r → trim adapters from read ends.  
+k=23 mink=11 → k-mer size for matching adapter sequences.  
+hdist=1 → allow 1 mismatch in k-mer match.  
+tpe tbo → trim both reads in a pair consistently.  
+qtrim=r trimq=10 → remove low-quality bases from the right end.  
+minlength=20 → discard too-short reads.  
+
+$\color{Green}\Large{\textbf{Q3:}}$ --> **How many reads were dropped in total during trimming?**  
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+#### (4) Mapping reads to a reference genome  
+
+After trimming, we map the cleaned reads to a reference genome so we know where each read originates in the genome and can study genetic variation (DNA) [note at this stage that studying gene expression (RNA) relies on similar approaches].  
+
+So in this context, to identify variants we first need to map reads to a `reference genome`, but **What is a Reference Genome?**  
+
+A reference genome is a digital representation of an organism’s complete DNA sequence:  
+It acts as a scaffold to which newly sequenced reads are compared.  
+It is usually a consensus sequence built from one or several individuals of a species.  
+Example: Homo sapiens GRCh38, Neurospora crassa OR74A reference.  
+
+**Reference genome have their limitations though**:  
+It is not the genome of every individual — real individuals contain variants, structural rearrangements, and missing regions not represented in the reference.  
+Some genomic regions (e.g., centromeres, telomeres, repeats) are often incomplete or poorly assembled.  
+
+Since we are working with sequencing reads from `Saccharomyces cerevisiae`, we'll use a genome assembly from the same species as reference, here the strain `S288C`   
+
+```
+wget http://sgd-archive.yeastgenome.org/sequence/S288C_reference/genome_releases/S288C_reference_genome_Current_Release.tgz
+gunzip S288C_reference_genome_Current_Release.tgz # unzip the dowloaded file
+tar xvf S288C_reference_genome_Current_Release.tar # untar (extra level of compression) the resulting file
+rm S288C_reference_genome_Current_Release.tar # remove tar file as we won't need it anymore
+```
+
+You should now see a `S288C_reference_genome_R64-5-1_20240529` folder with inside a `S288C_reference_sequence_R64-5-1_20240529.fsa.gz` file, that as the name states, is the `Saccharomyces cerevisiae strain S288C reference genome`, stored in fasta `format`.   
+
+ - Quickly check the sequences inside it:  
+```
+zgrep ">" S288C_reference_genome_R64-5-1_20240529/S288C_reference_sequence_R64-5-1_20240529.fsa.gz
+```
+
+- Optionally, we simplify the header of each sequence (here full chromosomes):
+```
+zcat S288C_reference_genome_R64-5-1_20240529/S288C_reference_sequence_R64-5-1_20240529.fsa.gz | perl -pe 's/>.*chromosome=/>chr/' | tr -d ']' | perl -pe 's/>ref.*/>chrmt/' > S288C_reference_sequence_R64-5-1_20240529.fna
+```
+
+**You can remove the uncrompressed directory**  
+```
+rm -r S288C_reference_genome_R64-5-1_20240529  # the -r option here specifiy that we are removing a directory
+```
+
+$\color{Green}\Large{\textbf{Q4:}}$ --> **How many chromosomes does the S288C assembly has?**  
+Note that `mt` often stands for Mitochondria
+
+
+Because the genome can be very large, we index it first: this creates a searchable data structure that allows aligners to quickly find where each read might match, instead of scanning the entire genome base by base.     
+
 
 
 
