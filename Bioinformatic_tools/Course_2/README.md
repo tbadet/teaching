@@ -152,7 +152,7 @@ Tip: When using / defining variables, always check the result with `echo`
 
 **Now you are ready to trim**:  
 ```
-bbduck.sh threads=4 -Xmx20g in1=${i1} out1=BBtrim/${i1%.fastq.gz}_clean1.fq in2=${i2} out2=BBtrim/${i2%.fastq.gz}_clean2.fq ref=truseq.fa.gz ktrim=r k=23 mink=11 hdist=1 tpe tbo qtrim=r trimq=10 minlength=20  
+bbduk.sh threads=4 -Xmx20g in1=${i1} out1=BBtrim/${i1%.fastq.gz}_clean1.fq in2=${i2} out2=BBtrim/${i2%.fastq.gz}_clean2.fq ref=truseq.fa.gz ktrim=r k=23 mink=11 hdist=1 tpe tbo qtrim=r trimq=10 minlength=20  
 ```
 
 **Options explained**:  
