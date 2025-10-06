@@ -271,8 +271,8 @@ Heuristic algorithms (e.g., BWA-MEM, Bowtie2) compromise between exact search an
 mkdir BAM
 seq_index="ERR1309170"
 ref_index="S288C_reference"
-clean_fwd_reads="BBtrim/ERR1309170_clean1.fq"
-clean_rev_reads="BBtrim/ERR1309170_clean2.fq"
+clean_fwd_reads="BBtrim/ERR1309170_1_clean1.fq"
+clean_rev_reads="BBtrim/ERR1309170_2_clean2.fq"
 bowtie2 -p 4 --rg-id ${seq_index} --rg SM:${seq_index} -x ${ref_index} -1 ${clean_fwd_reads} -2 ${clean_rev_reads} | samtools view -@ 4 -Sb | samtools sort -@ 4 > BAM/${seq_index}.bam 
 samtools index BAM/${seq_index}.bam # this step index the BAM aligment file for time-efficient parsing  
 ```
