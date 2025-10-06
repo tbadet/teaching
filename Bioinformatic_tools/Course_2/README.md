@@ -266,7 +266,7 @@ Balancing speed (billions of reads to map) vs sensitivity (finding the true best
 Heuristic algorithms (e.g., BWA-MEM, Bowtie2) compromise between exact search and efficiency.  
 ```
 
-- Mapping shold take ~10-15 minutes, use this time to go through the tutorial / questions
+- Mapping should take ~10-15 minutes, use this time to go through the tutorial / questions
 ```
 mkdir BAM
 seq_index="ERR1309170"
@@ -406,7 +406,7 @@ cat $REF.fai | cut -f1
 ```
 
 - then you can define the chromosome, create an output directory and specify your input alignment file and output file:  
-Note that we set -ploidy 1: indeed, `Saccharomyces cerevisiae` is haploid, so each position should have only one allele. Setting this prevents false heterozygous calls.  
+Note that we set -ploidy 1, so each position should have only one allele (for time and simplicity) but `Saccharomyces cerevisiae` isolates can be haploid or diploid.  
 ```
 chr="chrI"
 mkdir gVCF
