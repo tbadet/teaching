@@ -277,6 +277,12 @@ bowtie2 -p 4 --rg-id ${seq_index} --rg SM:${seq_index} -x ${ref_index} -1 ${clea
 samtools index BAM/${seq_index}.bam # this step index the BAM aligment file for time-efficient parsing  
 ```
 
+
+
+```
+cp /legserv/Temp/Thomas/ERR1309170.sorted.bam* .
+```
+
 **What is it doing**:  
 --rg-id and --rg SM → read group identifiers, necessary for variant calling later using GATK.  
 We align reads to the reference genome using bowtie2 and use samtools to transform the output (SAM by default) into a coordinate sorted BAM format.  
