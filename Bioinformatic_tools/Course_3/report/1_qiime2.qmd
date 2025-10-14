@@ -1,0 +1,230 @@
+## QIIME2 Workflow
+
+QIIME2 is a powerful, scalable and decentralised microbiome analysis platform that brings together a wide range of analytical capabilities, and has been online since 2019.
+
+More information in :
+
+-   Please cite: reproducible, interactive, scalable and extensible microbiome data science using QIIME 2. Nature Biotechnology. 2019, 37(8): 852-857. <https://docs.qiime2.org/2023.5>\
+-   Check out the QIIME2 website for details on how to install it! <https://docs.qiime2.org/2023.2/install/>
+-   Check also <https://xkcococo.github.io/blog/2023/Use-QIIME2-to-Preprocess-16S-Sequencing-Files/> a very good site for importing 16S
+
+## Load the QIIME2
+
+```{r, InstalationQIIME2, eval=F,echo=T}
+export PATH=~/miniconda3/bin:$PATH #select path
+source activate qiime2-2023.5
+
+# MoreTmpSpace
+export TMPDIR=/home/PJJ/tmp 
+```
+
+## Importing Data into QIIME2
+
+::: callout-warning
+Underscore incompatible with import into qiime2
+:::
+
+for delet underscore
+```{r , eval=F}
+for file in *_*; do mv "$file" "${file//_/}"; done
+```
+
+
+## Create manifest for QIIME2
+
+```{r, CreationManifest, eval=F,echo=T}
+cd /home/cmaslard/data_qiime2/seq
+echo 'sample-id','absolute-filepath','direction'> manifest.txt
+ls *.fastq|while read id; #add .gz if compress
+do
+echo "${id%%_*},$PWD/$id,forward">> /home/cmaslard/data_qiime2/seq/manifest.txt;
+done
+```
+
+## Import sequence in QIIME2 (demux)
+
+**This step merges all the samples together, the output file is the merged paired-demux.qza for denoising.** No need to trim the adapters because i use **clean data**.
+
+```{r ,ImportationToQIIME2 ,eval=F,echo=T}
+cd /home/PJJ/CM/data
+qiime tools import \
+--type 'SampleData[SequencesWithQuality]' \
+--input-path manifest.txt \
+--output-path demux.qza \
+--input-format SingleEndFastqManifestPhred33 
+```
+
+## Sequence Denoising with DADA2
+
+Dada2 denoising generates ASVs and representative sequences, the input file paired-demux.qza used in the previous step, and the output file is the ASV table table-dada2.qza in qza format and representative sequences rep-seqs-dada2.qza
+
+```{r ,DenoisingWithDADA2 ,eval=F,echo=T}
+time qiime dada2 denoise-single \
+--i-demultiplexed-seqs demux.qza \
+--p-trim-left 0 \
+--p-trunc-len 120 \
+--o-representative-sequences rep-seqs-dada2.qza \
+--o-table table-dada2.qza \
+--o-denoising-stats stats-dada2.qza 
+```
+
+## Generating the Taxonomy Table
+
+There are two options for generating the taxonomy table: 1. Train your own feature classifier, or 2. Use a pre-traiend feature classifier provided by QIIME.
+
+### For Bacteria
+
+I will use the pre-trained classifier "Silva 138 99% OTUs full-length sequences.
+
+For more information see :
+
+-   <https://www.arb-silva.de/documentation/release-138/> #silva-138
+-   <https://zenodo.org/record/6395539> #silva-138-99-nb-classifier.qza
+-   <https://docs.qiime2.org/2023.9/data-resources/#taxonomy-classifiers-for-use-with-q2-feature-classifier>
+
+```{r ,download classifier ,eval=F,echo=T}
+#wget -O "silva-138-99-nb-classifier.qza" "https://data.qiime2.org/2020.8/common/silva-138-99-nb-classifier.qza" #old version
+wget -O "silva-138-99-nb-classifier.qza" "https://data.qiime2.org/2023.9/common/silva-138-99-nb-classifier.qza"
+```
+
+```{r, ProcessClassifier16S, eval=F,echo=T}
+qiime feature-classifier classify-sklearn \
+	  --i-classifier silva-138-99-nb-classifier.qza \
+	  --i-reads rep-seqs-dada2.qza \
+	  --o-classification taxonomy.qza
+```
+
+### For Fungi
+
+I will use the classifier "Unit V9 99%. find in [UNITE QIIME release for Fungi 2 V9](https://dx.doi.org/10.15156/BIO/2938080) publish in @abarenkov_unite_2024
+
+For tutoral see [Training the QIIME2 Classifier with UNITE ITS Reference Sequences](https://john-quensen.com/tutorials/training-the-qiime2-classifier-with-unite-its-reference-sequences/) for train classifier. *Instructions for creating a classifier file to be used by QIIME2 for the classification of fungal ITS sequences.*
+
+You can use also the pretrained classifier from [git hub UNITE v9.0 v25.07.2023 for qiime2-2023.9](https://github.com/colinbrislawn/unite-train/releases/tag/v9.0-v25.07.2023-qiime2-2023.9)
+
+-   Import the UNITE reference sequences into QIIME2.
+
+```{r, ImportClassifier, eval=F,echo=T}
+qiime tools import \
+--type FeatureData[Sequence] \
+--input-path sh_refs_qiime_ver9_99_s_25.07.2023.fasta \
+--output-path unite-ver9-seqs_99_25.07.2023.qza
+```
+
+-   Import the taxonomy file.
+
+    ```{r, ImportTaxoITS, eval=F,echo=T}
+    qiime tools import \
+    --type FeatureData[Taxonomy] \
+    --input-path sh_taxonomy_qiime_ver9_99_s_25.07.2023.txt \
+    --output-path unite-ver9-taxonomy_99_25.07.2023.qza \
+    --input-format HeaderlessTSVTaxonomyFormat
+    ```
+
+-   Train the classifier
+
+    ```{r, TrainClassifier, eval=F, echo=T}
+    qiime feature-classifier fit-classifier-naive-bayes \
+    --i-reference-reads unite-ver9-seqs_99_25.07.2023.qza \
+    --i-reference-taxonomy unite-ver9-taxonomy_99_25.07.2023.qza \
+    --o-classifier unite-ver9-99-classifier-25.07.2023.qza
+    ```
+
+-   Process classifier for ITS
+
+    ```{r, ProcessClassifierITS, eval=F,echo=T}
+    qiime feature-classifier classify-sklearn \
+    	  --i-classifier unite_ver9_99_s_25.07.2023-Q2-2023.9.qza \
+    	  --i-reads rep-seqs-dada2.qza \
+    	  --o-classification taxonomy.qza
+    ```
+
+## Generate a phylogenetic tree
+
+Generate a phylogenetic tree is important for calcul UniFrac diversity
+
+**Generate a Multiple Sequence Alignment (MSA)** Use qiime alignment mafft or another aligner to align your representative sequences. This step is crucial for constructing a phylogenetic tree.
+
+```{r, GenerateMSA, eval=F,echo=T}
+qiime alignment mafft \
+  --i-sequences rep-seqs-dada2.qza \
+  --o-alignment aligned-rep-seqs.qza
+```
+
+**Mask the Alignment** Masking the alignment helps to remove poorly aligned regions, which can negatively impact tree inference.
+
+```{r, MaskAlignment, echo=T, eval=F}
+qiime alignment mask \
+  --i-alignment aligned-rep-seqs.qza \
+  --o-masked-alignment masked-aligned-rep-seqs.qza
+```
+
+**Construct a Phylogenetic Tree** Use a phylogenetic tree-building method, such as FastTree or RAxML.
+
+```{r, MakePhylogeneticTree,echo=T, eval=F }
+qiime phylogeny fasttree \
+  --i-alignment masked-aligned-rep-seqs.qza \
+  --o-tree unrooted-tree.qza
+```
+
+Optionally, you can root the tree using midpoint rooting.
+
+```{r, RootedTree,echo=T, eval=F}
+qiime phylogeny midpoint-root \
+  --i-tree unrooted-tree.qza \
+  --o-rooted-tree rooted-tree.qza
+```
+
+```{r, ExportTaxonomy, eval=F,echo=T}
+#Export taxonomy info in .tsv format
+qiime tools export \
+  --input-path taxonomy.qza \
+  --output-path exported-feature-table
+
+#Output visualizations:
+qiime metadata tabulate \
+  --m-input-file taxonomy.qza \
+  --o-visualization taxonomy.qzv
+```
+
+## Export results
+
+In this step, we will use table-dada2.qza to generate our feature table. Export feature table to biom format.
+
+```{r, ExportFeatureTable, eval=F,echo=T}
+#Creating a TSV BIOM table
+#first, export your data as a .biom
+qiime tools export --input-path table-dada2.qza --output-path exported-feature-table
+
+#Convert .biom to .tsv
+biom convert -i exported-feature-table/feature-table.biom -o exported-feature-table/feature-table.tsv --to-tsv
+biom head -i feature-table.tsv
+
+biom convert -i feature-table/feature-table.biom \
+      -o feature-table/feature-table.txt \
+      --to-tsv
+
+# Delete comment lines
+  ed -i '/# Const/d' feature-table/feature-table.txt
+
+# For me, i prefer import in R via .csv
+biom convert -i exported-feature-table/feature-table.biom -o exported-feature-table/feature-table.csv --to-tsv
+
+# Exporting species annotations
+qiime tools export \
+      --input-path taxonomy.qza \
+      --output-path taxonomy
+
+# measure unifrac distance
+qiime diversity-lib weighted-unifrac \
+    --i-table table-dada2.qza \
+    --i-phylogeny rooted-tree.qza \
+    --p-threads 100 \
+    --o-distance-matrix weighted-unifrac-dm.qza
+
+# Export the distance matrix from QIIME 2:
+qiime tools export --input-path weighted-unifrac-dm.qza --output-path unifracDist
+
+# Convert the exported distance matrix to a csv file:
+biom convert -i unifracDist/distance-matrix.tsv --to-tsv --header-key taxonomy -o unifracDist.csv
+```

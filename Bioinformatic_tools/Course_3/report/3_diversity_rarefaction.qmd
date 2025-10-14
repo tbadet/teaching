@@ -1,0 +1,111 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+## Diversity
+
+```{r}
+# Pkg -----
+library(ggpubr)
+library(rstatix)
+library(broom)
+library(ggplot2)
+library(multcompView)
+library(ggrepel)
+library(ggpattern)
+library(readxl)
+library(tidyverse)
+library(dplyr)
+library(knitr)
+library(kableExtra)
+library(FactoMineR)
+library(qiime2R) #remotes::install_github("jbisanz/qiime2R") # current version is 0.99.20
+library(vegan)
+library(phyloseq)
+library(sjPlot) #https://cran.r-project.org/web/packages/sjPlot/vignettes/tab_model_estimates.html
+library(pscl)
+library(patchwork)
+library(ggtext) #install.packages("ggtext")
+library(RColorBrewer)
+library(zCompositions)
+library(lme4)
+library(emmeans)
+library(readxl)
+library(metacoder) # devtools::install_github("grunwaldlab/metacoder")
+library(foreach)
+library(doParallel)
+library(ggrepel)
+library(forcats)
+library(scales)
+library(patchwork)
+library(knitr)
+library(colorspace)
+library(gplots)
+#library(edgeR) #I hope i not need that
+#library(ade4TkGUI) #install.packages("ade4TkGUI")
+library(statmod)
+library(ComplexUpset)
+library(paletteer) 
+
+#function
+#source(here::here("xp1_analyse/script/function/graph_function.R")) #graphique perso
+#source(here::here("xp1_analyse/script/function/data_importation_xp1.R")) #for importation of the data
+source(here::here("src/function/stat_function/stat_analysis_main.R")) # for make plot 
+source(here::here("src/function/Evaluate_contrast.R")) # Function to evaluate color contrast
+source(here::here("src/function/collect_mcom_counts.R"))
+
+my_color_palette <- read_excel(here::here("data/color_palette.xlsm"))
+set.seed(1) # set seed for analysis reproducibility
+
+# Import data from before
+## for 16S
+load(here::here(paste0("data/mcom/output/save/df_16S_count_importation_amplicon.RData")))
+load(here::here(paste0("data/mcom/output/save/df_16S_data_loss_importation_amplicon.RData")))
+load(here::here(paste0("data/mcom/output/save/df_16S_metadata_importation_amplicon.RData")))
+load(here::here(paste0("data/mcom/output/save/df_16S_taxonomy_importation_amplicon.RData")))
+load(here::here(paste0("data/mcom/output/save/df_16S_rooted_tree_importation_amplicon.RData")))
+
+## for ITS
+load(here::here(paste0("data/mcom/output/save/df_ITS_count_importation_amplicon.RData")))
+load(here::here(paste0("data/mcom/output/save/df_ITS_metadata_importation_amplicon.RData")))
+load(here::here(paste0("data/mcom/output/save/df_ITS_taxonomy_importation_amplicon.RData")))
+load(here::here(paste0("data/mcom/output/save/df_ITS_rooted_tree_importation_amplicon.RData")))
+
+```
+
+## Alpha-diversity
+
+### Alpha-div by compartment
+
+Alpha-diversity represents diversity within an ecosystem or a sample, in other words, what is there and how much is there in term of species. However, it is not easy to define a species and we can calculate alpha-diversity at different taxonomic levels.
+
+Several alpha-diversity indices can be calculated. Within the most commonly used:
+
+-   Richness represents the number of species observed in each sample.
+-   Chao1 estimates the total richness.
+-   Pielou's evenness provides information about the equity in species abundance in each sample, in other words are some species dominating others or do all species have quite the same abundances.
+-   Shannon index provides information about both richness and evenness.
+
+Alpha-diversity is calculated on the raw data It is important to not use filtered data because many richness estimates are modeled on singletons and doubletons in the occurrence table. So, you need to leave them in the dataset if you want a meaningful estimate. Moreover, we usually not using normalized data because we want to assess the diversity on the raw data and we are not comparing samples to each other but only assessing diversity within each sample. In doubt I rarefied or not and did find the same patterne appeared with or without rarefaction at 16000
+
+```{r, CalculAlphaDiv}
+# for 16S
+data_richness <- estimateR(df_16S_count %>% t())                                            # calculate richness and Chao1 using vegan package
+data_evenness <- diversity(df_16S_count %>% t()) / log(specnumber(df_16S_count %>% t()))                # calculate evenness index using vegan package
+data_shannon <- diversity(df_16S_count %>% t(), index = "shannon")                          # calculate Shannon index using vegan package
+data_alphadiv <- cbind(df_16S_metadata, t(data_richness), data_shannon, data_evenness) # combine all indices in one data table
+rm(data_richness, data_evenness, data_shannon)                                  # remove the unnecessary data/vector
+write.csv(data_alphadiv,here::here("data/mcom/output/alpha_div.csv"))
+
+# for ITS
+data_richness <- estimateR(df_ITS_count %>% t())                                            # calculate richness and Chao1 using vegan package
+data_evenness <- diversity(df_ITS_count %>% t()) / log(specnumber(df_ITS_count %>% t()))                # calculate evenness index using vegan package
+data_shannon <- diversity(df_ITS_count %>% t(), index = "shannon")                          # calculate Shannon index using vegan package
+data_alphadiv_ITS <- cbind(df_ITS_metadata, t(data_richness), data_shannon, data_evenness) # combine all indices in one data table
+rm(data_richness, data_evenness, data_shannon)                                  # remove the unnecessary data/vector
+write.csv(data_alphadiv_ITS,here::here("data/mcom/output/alpha_div_ITS.csv"))
+```
+
+**Visualization of the four alpha-diversity indices for the five compartment for bacteria and for the six compartiment for fungy**
