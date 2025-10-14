@@ -1,3 +1,2 @@
-The course will be available here: at the end of the course.
-The code sheet and answers are available here : https://cmaslard.xyz/bioinformatic_tools_mcom_analyse/ and will be updated throughout the course.
-The data and files will be available here at the end of the course and are currently available here: https://github.com/cmaslard/bioinformatic_tools_mcom_analyse
+The course will be available here: Bioinformatic_tools/Course_3/src/teaching_bioinfo_course_3_2025.pdf
+The code sheet and answers are available here : https://cmaslard.xyz/bioinformatic_tools_mcom_analyse/ and was update throughout the course.
