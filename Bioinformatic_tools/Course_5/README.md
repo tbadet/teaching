@@ -2,8 +2,8 @@
    
 > This tutorial guides you through a **DNA sequencing analysis workflow**, from raw reads to _de novo_ genome assembly.     
    
-Mapping sequencing reads to a reference genome and calling variants is a central method in modern biology for understanding genetic differences and their functional consequences. By aligning raw reads to a reference, researchers can pinpoint where in the genome each fragment originates, which allows the detection of single nucleotide variants, insertions, deletions, and larger structural changes. This approach is useful in many contexts, from identifying mutations linked to diseases, to studying genetic diversity in populations, to exploring evolutionary relationships between species. Once variants are identified, they can be connected to phenotypes, adaptive traits, or molecular mechanisms, making this pipeline a foundation for both basic research and applied genomics.     
-   
+De novo genome assembly is a cornerstone of genomics that enables researchers to reconstruct an organism’s genome directly from sequencing reads, without relying on a reference. This approach is essential for studying non-model species, exploring genomic novelty, and uncovering structural features that reference-based methods can miss. By overlapping and connecting short or long reads into contiguous sequences (contigs) and scaffolds, assembly algorithms rebuild the genomic landscape from scratch. The resulting assemblies provide the foundation for gene annotation, comparative genomics, and evolutionary analyses, allowing researchers to investigate genome organization, repeat content, and the genetic basis of biological diversity.   
+     
 ---   
    
 $\color{Orange}\Huge{\textbf{Major aims}}$   
