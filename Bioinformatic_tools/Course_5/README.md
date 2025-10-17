@@ -21,7 +21,7 @@ $\color{Orange}\Huge{\textbf{Major aims}}$
    
 For that you'll be using `SPAdes`. SPAdes (St. Petersburg genome assembler) is a popular tool for de novo genome assembly from short-read sequencing data. It is particularly well-suited for paired-end Illumina reads and uses a de Bruijn graph–based approach with sophisticated error correction to reconstruct contiguous genome sequences (contigs). For more information about the tools you can visit their github [page](https://ablab.github.io/spades/).     
 
-$\color{Green}\{\textbf{To explore the effect of `_k-mer_` size on assembly output, we'll split the class into 4 groups:}}$  
+$\color{Green}\{\textbf{To explore the effect of k-mer size on assembly output, we'll split the class into 4 groups:}}$  
   
 --> **4 groups that will try different k-mer sizes for scaffolding, talk among yourselves to agree on 4 set sof k-mer sizes to try and define them as in**    
 ```
