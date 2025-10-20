@@ -73,6 +73,8 @@ What impact of k-mer sizes on the contiguity?
 **Why assemblies are useful**     
 👉 Using the generated scaffolds, you can start looking for genes (i.e. coding sequences), and infer RNA/protein sequences.     
 
+- To get an idea of the types of hints / clues we can use to perform `eukaryote` gene annotation, have a look at this [link](https://neutra.bzh.uni-heidelberg.de/jbrowse/JBrowse-1.12.3/index.html?loc=1%3A4540661..4558420&tracks=DNA%2CWT%2CNC10&highlight=)   
+
 ---     
 
 **Annotating a genome assembly**  
