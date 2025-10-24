@@ -14,15 +14,34 @@ $\color{Orange}\Huge{\textbf{Major aims}}$
      
 ---     
    
-#### :rotating_light: No report to submit :rotating_light:     
+#### :rotating_light: Simple summary report to submit :rotating_light:     
    
 **Tips**: be aware of `where` you currently are on the server (PATH), which system (console==R, terminal==shell) and environment (micromamba activate)   
 
 ---     
 
-> $\color{Green}{\textbf{The following part illustrates the different steps from raw reads to the reads count table}}$
+> $\color{Green}\Large{\textbf{The following part illustrates the different steps from raw reads to the reads count table}}$
 
-> $\color{Red}\Huge{\textbf{Do NOT run it}}$  - they are simply here for reference   
+> $\color{Red}\Large{\textbf{Do NOT run it}}$  - I provide the pipeline here for reference    
+
+- All steps are performed on the `Terminal` and will required additional tools that you can install into a new micromamba environment with:
+```
+micromamba create -n rnaseq_pipeline -c conda-forge -c bioconda \
+    sra-tools=3.0.0 \
+    bbmap=38.99 \
+    star=2.7.11b \
+    htseq=2.0.9 \
+    samtools=1.15.1 \
+    gffread=0.12.7
+micromamba activate rnaseq_pipeline
+```
+  
+> SRA tools / fastq-dump (sra-tools)  
+> BBMap (bbmap)  
+> STAR (aligner)  
+> HTSeq (counting)  
+> samtools (BAM processing)  
+> gffread (GFF → GTF conversion)  
 
 ### 1. Retrieve metadata and accession lists   
   
@@ -225,7 +244,238 @@ Note that output files are named `BAM/<sample>_multiAligned.sortedByCoord.out.ba
 `-m union`: count a read if it overlaps any CDS of a gene (most common mode).   
     
 Purpose: To clean, align, and count reads per gene — generating raw counts for downstream DESeq2 analysis.    
+   
+---     
 
+## Differential Gene Expression Analysis with DESeq2
 
+> $\color{Green}\Large{\textbf{The next part starts from the above generated count tables to peform differential gene expression}}$
 
+> $\color{Red}\Large{\textbf{START HERE: today's hands-on exercice}}$     
+
+- On the Terminal, first get the count tables stored on the server:   
+```
+cp -r /legserv/Temp/Thomas/HTSeq_count_tables /path/to/where/you/want/to/copy/them
+```
+
+- Note that all files from the pipeline above, including the reads and alignment files, are also available if you want to have a look at it:   
+```
+cp -r /legserv/Temp/Thomas/yeast_RNA /path/to/where/you/want/to/copy/them
+```
+
+#### :rotating_light: Following steps are carried in RStudio (console) :rotating_light:     
+  
+Load required R packages   
+```
+library(DESeq2)
+library(tidyverse)
+```
+  
+`DESeq2`: statistical framework for differential expression using negative binomial models   
+`tidyverse`: provides useful tools for string manipulation, data handling, and plotting   
+
+----------------------------------------------------------
+ Step 1: Define working directory and input files   
+----------------------------------------------------------
+
+Set working directory to where the `HTSeq` count files are stored (`_HTSeq.txt` suffix).   
+Each file contains raw read counts per gene for one RNA-seq sample.   
+```
+setwd("/path/to/where/you/want/to/coied/them/")
+```
+  
+Next list and store all files ending with `_HTSeq.txt` in the directory.   
+The argument full.names=TRUE ensures full paths are returned (important for DESeq2 input).   
+```
+files <- list.files(path = ".", pattern = "*_HTSeq.txt", full.names = TRUE)
+```
+  
+----------------------------------------------------------
+ Step 2: Extract sample information from filenames   
+----------------------------------------------------------
+  
+Remove the `_HTSeq.txt` suffix from each filename to get clean sample names.   
+```
+sampleNames <- gsub("_HTSeq.txt", "", basename(files))
+```
+
+Define experimental conditions based on filename patterns.   
+This assumes that sample names contain the string `unstressed` for controls.   
+If the filename contains `unstressed` → condition = `untreated`, otherwise → condition = `treated`   
+```
+conditions <- ifelse(grepl("unstressed", sampleNames), "untreated", "treated")
+```
+
+Extract replicate numbers (if encoded in filenames as "Rep1", "Rep2", etc.)   
+This is optional but useful for tracking technical/biological replicates.   
+```
+replicate <- str_extract(sampleNames, "Rep\\d+")
+```
+
+----------------------------------------------------------
+ Step 3: Build the sample metadata table (colData)   
+----------------------------------------------------------
+
+ - DESeq2 requires a metadata data frame where each row corresponds to a sample. The row names must match the sample names used in the count files.   
+ 
+ > Columns typically include:   
+ >  - condition: experimental group (treated vs untreated)   
+ >  - replicate: replicate number (optional)   
+ >  - files: path to each count file
+   
+```
+colData <- data.frame(
+  row.names = sampleNames,
+  cat = factor(conditions, levels = c("untreated", "treated")),  # specify reference level
+  files = paste0(sampleNames, "_HTSeq.txt"),
+  replicate = replicate
+)
+```
+
+Create a combined column for condition + replicate if needed   
+```
+colData$condition <- paste0(colData$cat, "_", colData$replicate)
+```
+   
+Reorder columns for readability   
+```
+colData <- colData[, c("condition", "files", "cat", "replicate")]
+```
+
+----------------------------------------------------------
+ Step 4: Construct DESeq2 dataset from HTSeq count files   
+----------------------------------------------------------
+```
+dds <- DESeqDataSetFromHTSeqCount(colData, directory = ".", design = ~ cat)
+```
+
+**Explanation**   
+> DESeqDataSetFromHTSeqCount():  
+>  - Reads the count data from HTSeq output files  
+>  - Links them with sample metadata  
+>  - Defines the experimental design formula (~ cat)  
+  
+The design formula tells DESeq2 how to model gene expression variation.  
+ 
+----------------------------------------------------------
+ Step 5: Filter out low-count genes    
+----------------------------------------------------------
+
+> Genes with very low counts across all samples provide little statistical power. Here we remove genes with fewer than 10 total counts across all samples.   
+```
+dds <- dds[rowSums(counts(dds)) > 10, ]
+```
+
+----------------------------------------------------------
+ Step 6: Run the DESeq2 differential expression pipeline   
+----------------------------------------------------------
+  
+> This is the core step of DESeq2: it performs several statistical operations to model count data and detect differential expression.
+```
+dds <- DESeq(dds)
+```
+
+**Explanation**  
+When you run `DESeq(dds)`, the function executes the following steps:   
+  
+ (1) Estimate size factors  → Normalization
+     DESeq2 corrects for differences in sequencing depth and RNA composition
+     between samples by estimating a "size factor" for each sample.
+     Each gene’s raw counts are divided by the size factor of its sample,
+     producing normalized counts that can be compared across conditions.
+  
+     Conceptually:  
+     normalized_count = raw_count / size_factor   
+
+     This ensures that differences in read depth do not bias the analysis.  
+
+ (2) Estimate dispersion  → Biological variability
+     DESeq2 assumes that read counts follow a **negative binomial distribution**,
+     which accounts for both technical and biological variability.
+     It first estimates gene-wise dispersion (variance), then shrinks them
+     toward a trend line to stabilize estimates for low-count genes.
+
+     This shrinkage (empirical Bayes approach) improves reliability,
+     especially for genes with few reads or few replicates.
+
+ (3) Fit the model and test for differential expression
+     For each gene, DESeq2 fits a **generalized linear model (GLM)** of the form:
+         `count ~ condition`
+     where “condition” (here ‘cat’) is the experimental variable
+     (treated vs untreated).
+
+     It then performs a **Wald test** (by default) to determine whether
+     the condition coefficient (i.e., log2 fold change) significantly
+     differs from zero.
+
+     In other words:
+     - H0 (null): gene expression is the same between conditions
+     - H1 (alternative): expression differs (up- or down-regulated)
+
+ (4) Adjust p-values for multiple testing (Benjamini-Hochberg)
+     Since thousands of genes are tested simultaneously, DESeq2 corrects
+     raw p-values to control the False Discovery Rate (FDR).
+     The result is stored in the `padj` column.
+
+ - Overall, this single command automates normalization, variance modeling, and hypothesis testing, producing a statistically robust framework for identifying differentially expressed genes.    
+
+--------------------------------------------------------------
+ Step 7: Extract differential expression results   
+--------------------------------------------------------------
+```
+res <- results(dds, contrast = c("cat", "treated", "untreated"))
+```
+  
+The contrast defines what we are comparing:    
+`contrast = c("cat", "treated", "untreated")` means we compute (treated / untreated)  
+
+--------------------------------------------------------------
+ Step 8: Sort results by adjusted p-value (FDR)
+--------------------------------------------------------------
+```
+res <- res[order(res$padj), ]
+```
+
+`padj` = Benjamini-Hochberg corrected _p_-value controlling false discovery rate   
+
+--------------------------------------------------------------
+ Step 9: Interpret log2 fold change (log2FC)
+--------------------------------------------------------------
+
+View top genes (lowest adjusted p-values):  
+```
+head(res)
+```
+
+- Interpretation of log2FC depends on contrast order:  
+  
+Here: log2FC = log2(expression in treated / expression in untreated)
+  
+→ Positive log2FC: gene is UPregulated in treated samples  
+→ Negative log2FC: gene is DOWNregulated in treated samples   
+ 
+Example:  
+   log2FC = +1 → 2× higher expression in treated  
+   log2FC = -1 → 2× lower expression in treated  
+
+**Pro tip**: Always verify the contrast order, as reversing it flips the sign!    
+
+--------------------------------------------------------------
+ Step 10: Explore and export results
+--------------------------------------------------------------
+
+Focusing on differentially expressed genes at the 5% false-discovery rate:   
+```
+deg <- subset(res, padj < 0.05)  # Significant DEGs (FDR < 0.05)
+table <- as.data.frame(deg)
+write.csv(as.data.frame(res), file = "DEG_results.csv") # You can save results table for downstream analysis or plotting
+```
+  
+--------------------------------------------------------------
+ Step 11: Visualize your results (figure) and interpret it
+--------------------------------------------------------------
+
+:question:  $\color{Green}\Large{\textbf{As a summary report}}$ :question:     
+
+> #### Find a way to visualize your results, and using the name of the differentially expressed genes, provide a simple interpretation to your results
 
