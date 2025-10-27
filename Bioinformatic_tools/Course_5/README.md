@@ -267,6 +267,7 @@ cp -r /legserv/Temp/Thomas/yeast_RNA /path/to/where/you/want/to/copy/them
   
 Load required R packages   
 ```
+BiocManager::install("DESeq2")
 library(DESeq2)
 library(tidyverse)
 ```
