@@ -108,33 +108,40 @@ myGAPIT <- GAPIT(
 
 GAPIT produces a a large number of output files, here are the files generated with the `YPACETATE` example above:   
 
->GAPIT.Association.GWAS_Results.MLM.YPACETATE.bed
+>GAPIT.Phenotype.View.YPACETATE.pdf
+GAPIT.Association.Filter_GWAS_results.csv
 GAPIT.Association.GWAS_Results.MLM.YPACETATE(NYC).csv
 GAPIT.Association.GWAS_StdErr.MLM.YPACETATE(NYC).csv
-GAPIT.Association.Manhattan_Chro.MLM.YPACETATE(NYC).pdf
-GAPIT.Association.Manhattan_Geno.MLM.YPACETATE(NYC).pdf
-GAPIT.Association.Optimum.MLM.YPACETATE.pdf
+GAPIT.Association.Manhattans_Symphysic_Traitsnames.csv
 GAPIT.Association.Prediction_results.MLM.YPACETATE.csv
 GAPIT.Association.PVE.MLM.YPACETATE.csv
-GAPIT.Association.QQ.MLM.YPACETATE(NYC).pdf
-GAPIT.Association.Significant_SNPs.MLM.YPACETATE.pdf
 GAPIT.Association.Vairance_markers.MLM.YPACETATE.csv
-GAPIT.Phenotype.Distribution_Significantmarkers.MLM.YPACETATE.pdf
-GAPIT.Phenotype.View.YPACETATE.pdf
-GAPIT.Genotype.Distance_R_Chro.pdf
 GAPIT.Genotype.Distance.Rsquare.csv
 GAPIT.Genotype.Frequency_MAF.csv
-GAPIT.Genotype.Frequency.pdf
 GAPIT.Genotype.Kin_Zhang.csv
+GAPIT.Genotype.PCA_eigenvalues.csv
+GAPIT.Genotype.PCA.csv
+GAPIT.Association.Manhattan_Chro.MLM.YPACETATE(NYC).pdf
+GAPIT.Association.Manhattan_Geno.MLM.YPACETATE(NYC).pdf
+GAPIT.Association.Manhattans_Symphysic_Legend.pdf
+GAPIT.Association.Manhattans_Symphysic.pdf
+GAPIT.Association.Optimum.MLM.YPACETATE.pdf
+GAPIT.Association.QQ.MLM.YPACETATE(NYC).pdf
+GAPIT.Association.Significant_SNPs.MLM.YPACETATE.pdf
+GAPIT.Genotype.Distance_R_Chro.pdf
+GAPIT.Genotype.Frequency.pdf
 GAPIT.Genotype.Kin_Zhang.pdf
 GAPIT.Genotype.MAF_Heterozosity.pdf
 GAPIT.Genotype.PCA_2D.pdf
 GAPIT.Genotype.PCA_3D.pdf
-GAPIT.Genotype.PCA.csv
 GAPIT.Genotype.PCA_eigenValue.pdf
-GAPIT.Genotype.PCA_eigenvalues.csv
+GAPIT.Phenotype.Distribution_Significantmarkers.MLM.YPACETATE.pdf
 
 
 The full statistics outcome of the GWAS is in the file `GAPIT.Association.GWAS_Results.MLM.YPACETATE(NYC).csv`. This file reports for every SNP in the dataset the association with the analyzed trait.   
 
 Let's use R to identify the SNP showing the most significant association with the phenotype. You can graphically identify this SNP also by opening the file `GAPIT.Association.Manhattan_Geno.MLM.YPACETATE(NYC).pdf` (adjust to your trait).   
+
+
+
+
