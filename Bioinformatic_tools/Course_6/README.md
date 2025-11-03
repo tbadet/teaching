@@ -142,6 +142,39 @@ The full statistics outcome of the GWAS is in the file `GAPIT.Association.GWAS_R
 
 Let's use R to identify the SNP showing the most significant association with the phenotype. You can graphically identify this SNP also by opening the file `GAPIT.Association.Manhattan_Geno.MLM.YPACETATE(NYC).pdf` (adjust to your trait).   
 
+#### 🧠 Digging deeper into the GWAS results   
 
+- You also should find a file `GAPIT.Association.PVE.MLM.YPACETATE.csv` that list the top associated variants. It contains important output metrics from the applied GWAS model:   
 
+The table has two R² values:  
+GAPIT fits a linear mixed model (LMM) for each SNP:  
+> y = Xβ + Zu + e   
+
+where:  
+> y = Vector of phenotypic values >> The observed trait measurements for all individuals (e.g., plant height, yield, etc.).   
+X = Design matrix for fixed effects	Encodes known effects such as intercepts, population structure (e.g., PCs or covariates), and SNP genotype being tested.   
+β = Vector of fixed effect coefficients >> The estimated effects corresponding to X (e.g., SNP effect sizes, covariate coefficients).   
+Z = Design matrix for random effects >> Links individuals to their genetic background or kinship structure.   
+u = Vector of random genetic effects >> Captures the contribution of background polygenic effects assumed to follow u∼N(0,Kσ_g²), where K is the kinship matrix and σ_g² is the genetic variance.   
+e = Vector of residuals (errors)	>> Represents environmental noise and unexplained variance, assumed e∼N(0,Iσ_e²).   
+
+When testing one SNP, it compares two models:   
+
+(i) Without SNP (null model):    
+Only population structure (PCA) and kinship (K) terms are included.   
+> y = Xβ + Zu + e   
+
+→ gives R²_without SNP   
+   
+(ii) With SNP (full model):   
+Adds the tested SNP as a fixed effect.   
+> y = Xβ + g_"SNP" + Zu + e   
+
+where `g_SNP` is the fixed effect of the SNP >> The contribution of the SNP being tested to the phenotype. This is usually additive (0, 1, 2 for genotype counts).   
+→ gives R²_with SNP   
+   
+!!! The difference between these two R² values shows how much more variance the model explains by including that SNP:   
+> ΔR² = R²_with SNP − R²_without SNP
+
+- How much of the phenotypic variance is explained by the model and how much is the contribution of your top associated variant?    
 
