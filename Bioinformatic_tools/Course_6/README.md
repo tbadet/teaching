@@ -76,6 +76,9 @@ Input: A tab-delimited file containing phenotypes for all accessions/individuals
 pheno <- data.table::fread("pheno_filtered.tab", header = TRUE)
 ```
 
+- How many yeast strains were phenotyped and for how many different traits? Try to visualise it.  
+
+
 3️⃣ Load genotype data   
 Input: A HapMap-format genotype file (.hmp.txt), containing SNP genotypes across all individuals   
 ```
