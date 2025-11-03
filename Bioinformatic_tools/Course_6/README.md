@@ -49,10 +49,8 @@ center contains the name of genotyping center that produced the genotypes;
 protLSID contains the identifier for HapMap protocol;     
 assayLSID contain the identifier HapMap assay used for genotyping;     
 panelLSID contains the identifier for panel of individuals genotyped;     
-QCcode contains the quality control for all entries;     
-subsequently, the list of sample names.     
-Below it is an example of VCF file:     
-      
+QCcode contains the quality control for all entries; subsequently, the list of sample names.     
+          
 ---    
 
 #### Performing the association mapping   
@@ -113,34 +111,34 @@ myGAPIT <- GAPIT(
 
 GAPIT produces a a large number of output files, here are the files generated with the `YPACETATE` example above:   
 
->GAPIT.Phenotype.View.YPACETATE.pdf
-GAPIT.Association.Filter_GWAS_results.csv
-GAPIT.Association.GWAS_Results.MLM.YPACETATE(NYC).csv
-GAPIT.Association.GWAS_StdErr.MLM.YPACETATE(NYC).csv
-GAPIT.Association.Manhattans_Symphysic_Traitsnames.csv
-GAPIT.Association.Prediction_results.MLM.YPACETATE.csv
-GAPIT.Association.PVE.MLM.YPACETATE.csv
-GAPIT.Association.Vairance_markers.MLM.YPACETATE.csv
-GAPIT.Genotype.Distance.Rsquare.csv
-GAPIT.Genotype.Frequency_MAF.csv
-GAPIT.Genotype.Kin_Zhang.csv
-GAPIT.Genotype.PCA_eigenvalues.csv
-GAPIT.Genotype.PCA.csv
-GAPIT.Association.Manhattan_Chro.MLM.YPACETATE(NYC).pdf
-GAPIT.Association.Manhattan_Geno.MLM.YPACETATE(NYC).pdf
-GAPIT.Association.Manhattans_Symphysic_Legend.pdf
-GAPIT.Association.Manhattans_Symphysic.pdf
-GAPIT.Association.Optimum.MLM.YPACETATE.pdf
-GAPIT.Association.QQ.MLM.YPACETATE(NYC).pdf
-GAPIT.Association.Significant_SNPs.MLM.YPACETATE.pdf
-GAPIT.Genotype.Distance_R_Chro.pdf
-GAPIT.Genotype.Frequency.pdf
-GAPIT.Genotype.Kin_Zhang.pdf
-GAPIT.Genotype.MAF_Heterozosity.pdf
-GAPIT.Genotype.PCA_2D.pdf
-GAPIT.Genotype.PCA_3D.pdf
-GAPIT.Genotype.PCA_eigenValue.pdf
-GAPIT.Phenotype.Distribution_Significantmarkers.MLM.YPACETATE.pdf
+> GAPIT.Phenotype.View.YPACETATE.pdf    
+GAPIT.Association.Filter_GWAS_results.csv    
+GAPIT.Association.GWAS_Results.MLM.YPACETATE(NYC).csv    
+GAPIT.Association.GWAS_StdErr.MLM.YPACETATE(NYC).csv    
+GAPIT.Association.Manhattans_Symphysic_Traitsnames.csv    
+GAPIT.Association.Prediction_results.MLM.YPACETATE.csv    
+GAPIT.Association.PVE.MLM.YPACETATE.csv    
+GAPIT.Association.Vairance_markers.MLM.YPACETATE.csv    
+GAPIT.Genotype.Distance.Rsquare.csv    
+GAPIT.Genotype.Frequency_MAF.csv    
+GAPIT.Genotype.Kin_Zhang.csv    
+GAPIT.Genotype.PCA_eigenvalues.csv    
+GAPIT.Genotype.PCA.csv    
+GAPIT.Association.Manhattan_Chro.MLM.YPACETATE(NYC).pdf    
+GAPIT.Association.Manhattan_Geno.MLM.YPACETATE(NYC).pdf    
+GAPIT.Association.Manhattans_Symphysic_Legend.pdf    
+GAPIT.Association.Manhattans_Symphysic.pdf    
+GAPIT.Association.Optimum.MLM.YPACETATE.pdf    
+GAPIT.Association.QQ.MLM.YPACETATE(NYC).pdf    
+GAPIT.Association.Significant_SNPs.MLM.YPACETATE.pdf    
+GAPIT.Genotype.Distance_R_Chro.pdf    
+GAPIT.Genotype.Frequency.pdf    
+GAPIT.Genotype.Kin_Zhang.pdf    
+GAPIT.Genotype.MAF_Heterozosity.pdf    
+GAPIT.Genotype.PCA_2D.pdf    
+GAPIT.Genotype.PCA_3D.pdf    
+GAPIT.Genotype.PCA_eigenValue.pdf    
+GAPIT.Phenotype.Distribution_Significantmarkers.MLM.YPACETATE.pdf    
 
 
 The full statistics outcome of the GWAS is in the file `GAPIT.Association.GWAS_Results.MLM.YPACETATE(NYC).csv`. This file reports for every SNP in the dataset the association with the analyzed trait.   
@@ -149,9 +147,11 @@ Let's use R to identify the SNP showing the most significant association with th
 
 #### 🧠 Digging deeper into the GWAS results   
 
-- You also should find a file `GAPIT.Association.PVE.MLM.YPACETATE.csv` that list the top associated variants. It contains important output metrics from the applied GWAS model:   
+- [Here](https://zzlab.net/GAPIT/gapit_help_document.pdf) at page 21 of the GAPIT manual you'll find additional information on the output files. You should see for instance a file `GAPIT.Association.PVE.MLM.YPACETATE.csv` that list the top associated variants. It contains important output metrics from the applied GWAS model:   
 
-The table has two R² values:  
+You'll see that GAPIT computed the percentage of total phenotypic variance explained (PVE) by significantly associated markers.   
+
+In addition, the table has two R² values:  
 GAPIT fits a linear mixed model (LMM) for each SNP:  
 > y = Xβ + Zu + e   
 
@@ -180,6 +180,7 @@ where `g_SNP` is the fixed effect of the SNP >> The contribution of the SNP bein
    
 !!! The difference between these two R² values shows how much more variance the model explains by including that SNP:   
 > ΔR² = R²_with SNP − R²_without SNP
+
 
 - How much of the phenotypic variance is explained by the model and how much is the contribution of your top associated variant?    
 
