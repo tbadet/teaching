@@ -16,7 +16,11 @@ $\color{Orange}\Huge{\textbf{Major aims}}$
 
 - We'll be using the extensive dataset generated on >1k yeast strains collected from different environments. Here is the [link](https://www.nature.com/articles/s41586-018-0030-5) to the study first describing the **genomic dataset** and [here](https://www.cell.com/cell-reports/fulltext/S2211-1247(16)30802-6) the study that describes the **phenotypic variation** in the population.   
 
-From the Terminal, you can copy the genotyping (HapMap format) and the phenotyping tables from my Temp folder using:  
+$\color{Green}{\textbf{As a starter, have a quick look at those two studies (10 minutes). What are the main informations you get from those?}}$   
+
+--- 
+
+- Now that you have a better idea of the kind of data you'll be looking at, from the Terminal you can copy the genotyping (HapMap format) and the phenotyping tables from my Temp folder using:  
 ```
 cp -r /legserv/Temp/Thomas/GWAS_dataset /path/where/you/want/to/have/it
 ```
@@ -49,8 +53,6 @@ QCcode contains the quality control for all entries;
 subsequently, the list of sample names.     
 Below it is an example of VCF file:     
       
-As a starter, have a quick look at those two studies. What are the main informations you get from those?   
-
 ---    
 
 #### Performing the association mapping   
