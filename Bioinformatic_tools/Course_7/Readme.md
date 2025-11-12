@@ -1,9 +1,95 @@
+# Orthology inference and comparative genomics: uncovering the evolutionary relationships among genes  
+> This tutorial helps you assign orthologous relationships across the full set of proteins from different Saccharomyces species and begin exploring the corresponding results.  
 
-First activate micromamba and install `orthofinder` with:  
+Orthology inference seeks to identify genes across different species or individuals that share a common ancestral origin, providing a foundation for understanding genome evolution and functional diversification.  
+
+By comparing gene sequences and reconstructing their evolutionary histories, orthology inference distinguishes orthologs (genes diverged through speciation) from paralogs (genes diverged through duplication). This distinction is critical for comparative genomics, where the goal is to separate conservation from innovation, revealing which genes retain ancestral functions and which have adapted or diversified across lineages.  
+
+In the era of pangenomics, orthology-based analyses allow researchers to compare gene content across many genomes simultaneously, defining the core genome shared by all members of a species and the accessory genome that contributes to phenotypic diversity and ecological adaptation.  
+
+By reconstructing networks of gene relationships, orthology inference enables studies of gene family evolution, horizontal gene transfer, and the emergence of new functions, linking molecular evolution to adaptation and speciation. As a central framework in evolutionary and functional genomics, orthology inference bridges sequence similarity with biological meaning—transforming raw genomic data into evolutionary insights about how genes, pathways, and species evolve.  
+
+----------------------------------------
+
+First, in your shell terminal, activate micromamba and install `orthofinder` with:  
 ```
 micromamba activate
 micromamba install orthofinder
 ```
+
+- Next, copy the data from the Temp folder:
+```
+cp /legserv/Temp/Thomas/yeast_proteins.zip /where/you/want/
+```
+
+- You first need to unzip the file:  
+```
+unzip yeast_proteins.zip 
+```
+
+**Have a look at what's inside the folder (number of files, what type ..)**  
+
+----------------------------------------
+
+## This next step, not to overload the cluster, decide on a few groups that will run it (you can then share the results)  
+
+- Now, you can run the `orthofinder` pipeline by calling:  
+```
+orthofinder.py -a 1 -t 1 -f /path/to/yeast_proteins
+```
+
+You will see that `orthofinder` produces a global directory named `Orthofinder` inside of which you'll find many output folders and files.
+
+Key Orthofinder output files and folders  
+
+> **1. Citation.txt**   
+> Contains references to the original Orthofinder papers and related tools. Useful for acknowledging the methodology when using results in publications.  
+> 
+> **2. Comparative_Genomics_Statistics**  
+> Summary statistics across all genomes analyzed. Includes metrics like total number of genes, number of orthogroups, proportion of single-copy orthologs, and gene duplication events. Gives a high-level overview of gene content and conservation patterns.  
+> 
+> **3. Gene_Duplication_Events**  
+> Lists all duplication events inferred in each gene family. Helps identify gene family expansions, lineage-specific duplications, or potential paralogs.  
+> 
+> **4. Gene_Trees**
+> Contains phylogenetic trees for each orthogroup (typically in Newick format).
+> Trees can be visualized to inspect evolutionary relationships among genes and detect orthologs versus paralogs.
+> 
+> **5. Log.txt**  
+> Execution log for the run. Useful for troubleshooting or verifying parameters and runtime details.
+> 
+> **6. Orthogroups**  
+> Contains tables of orthogroups (sets of genes descended from a single ancestral gene).  
+> - Includes:  
+> Orthogroups.tsv → all genes grouped by orthogroup.  
+> Orthogroups_UnassignedGenes.tsv → genes not assigned to any orthogroup.  
+> Key file for analyzing core vs. accessory genome content in pangenome studies. 
+> 
+> **7. Orthogroup_Sequences** 
+> FASTA sequences for each orthogroup. Enables downstream analyses like multiple sequence alignment, Ka/Ks calculations, or domain analysis.  
+> 
+> **8. Orthologues**  
+> Lists pairwise orthologous relationships between genes in different species. Useful for targeted comparative studies between two species or for mapping genes to a reference genome.  
+> 
+> **9. Phylogenetic_Hierarchical_Orthogroups**  
+> Hierarchical grouping of orthogroups based on phylogenetic relationships. Useful for tracking gene family evolution across clades.  
+> 
+> **10. Putative_Xenologs**  
+> Genes that may have been acquired via horizontal gene transfer. Helps detect non-vertical inheritance in comparative genomics studies.  
+> 
+> **11. Resolved_Gene_Trees**  
+> Refined gene trees with inferred duplication and speciation events annotated. Important for accurate inference of orthology and paralogy.  
+> 
+> **12. Single_Copy_Orthologue_Sequences**  
+> FASTA sequences of genes present as single copies in all genomes.  
+> Often used for: Species tree reconstruction or Comparative analyses that require one-to-one orthologs.  
+> 
+> **13. Species_Tree**  
+> Reconstructed phylogenetic tree of all species included in the analysis. Built using single-copy orthologs and can be used for evolutionary or comparative studies.  
+> 
+> **14. Phylogenetically_Misplaced_Genes**  
+> Genes that do not conform to expected evolutionary relationships. May indicate misannotations, horizontal transfer, or sequencing errors.  
+
 
 ----------------------------------------
 
