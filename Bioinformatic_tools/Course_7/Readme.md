@@ -17,6 +17,8 @@ micromamba activate
 micromamba install orthofinder
 ```
 
+For more information about the tool, visit this [link](https://github.com/davidemms/OrthoFinder)   
+
 - Next, copy the data from the Temp folder:
 ```
 cp /legserv/Temp/Thomas/yeast_proteins.zip /where/you/want/
