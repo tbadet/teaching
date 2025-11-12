@@ -1,3 +1,10 @@
+
+First activate micromamba and install `orthofinder` with:  
+```
+micromamba activate
+micromamba install orthofinder
+```
+
 ----------------------------------------
 
 #### This script takes Orthofinder's Orthogroups.tsv (or a simplified version like Orthogroups_2.txt) and produces using R:  
