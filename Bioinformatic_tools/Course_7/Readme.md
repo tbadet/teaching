@@ -90,15 +90,30 @@ Key Orthofinder output files and folders
 > **14. Phylogenetically_Misplaced_Genes**  
 > Genes that do not conform to expected evolutionary relationships. May indicate misannotations, horizontal transfer, or sequencing errors.  
 
+**Explore the resulting files**    
 
 ----------------------------------------
 
-#### This script takes Orthofinder's Orthogroups.tsv (or a simplified version like Orthogroups_2.txt) and produces using R:  
+- An important output file is in the `Species_Tree` folder:
+
+You can easily visualize it in R using:  
+```
+library(ggtree)
+tree <- read.tree("/path/to/SpeciesTree_rooted.txt")
+ggtree(tree) + geom_tiplab()
+```
+
+**What can you say?**    
+
+----------------------------------------
+
+#### This next part takes Orthofinder's `Orthogroups.tsv` output and explores it using R to produce:  
 
 - A presence/absence matrix of orthogroups across strains/species.  
 - A heatmap of orthogroup copy numbers (capped at 10 for visualization).  
 - A summary of species-specific orthogroups.  
 - A pairwise sharing table between species.  
+
 
 ##### 1\. Load required R packages
 ```
@@ -114,7 +129,7 @@ These are standard R libraries for data wrangling (dplyr, tidyr, tibble), and vi
 
 ##### 2\. Read and reshape the Orthofinder table
 ```
-df <- read.delim("~/Documents/Orthogroups_2.txt", h = F)
+df <- read.delim("/path/to/Orthogroups.txt", h = F, sep = " ")
 dt <- reshape2::melt(df, id.vars = "V1")
 dt$variable <- NULL
 dt <- subset(dt, value != "")
@@ -123,7 +138,7 @@ dt$V1 <- gsub(":", "", dt$V1)
 names(dt) <- c("orthogroup", "protein", "strain")
 ```
 Explanation:   
-- Orthogroups_2.txt is a table where each row = orthogroup, each column = species/strain, and cells = protein IDs.  
+- Orthogroups.txt is a table where each row = orthogroup, each column = species/strain, and cells = protein IDs.  
 - melt() converts the wide table into a long format (tidy data).  
 - Empty cells are removed (subset(dt, value != "")).  
 - Strain names are simplified by removing anything after an underscore.  
@@ -140,7 +155,7 @@ Explanation:
 dt$species <- with(dt, ifelse(strain %in% c("BJ4", "Y55", "HN1", "IMX2600", "S288C", "SX2"), "Scerevisease", strain))
 ```
 Explanation:   
-- Some strains belong to the same species (e.g., Saccharomyces cerevisiae). This step maps multiple strains to a single species name for species-level analyses.   
+- Some strains belong to the same species (e.g., *Saccharomyces cerevisiae*). This step maps multiple strains to a single species name for species-level analyses.   
 
 ##### 4\. Compute orthogroup species representation   
 ```
