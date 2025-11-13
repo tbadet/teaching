@@ -19,9 +19,9 @@ micromamba install orthofinder
 
 For more information about the tool, visit this [link](https://github.com/davidemms/OrthoFinder)   
 
-- Next, copy the data from the Temp folder:
+- Next, copy the data from this Github folder:
 ```
-cp /legserv/Temp/Thomas/yeast_proteins.zip /where/you/want/
+wget https://github.com/tbadet/teaching/raw/refs/heads/main/Bioinformatic_tools/Course_7/yeast_proteins.zip
 ```
 
 - You first need to unzip the file:  
