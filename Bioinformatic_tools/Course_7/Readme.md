@@ -209,7 +209,7 @@ Explanation:
 > Scerevisease | Lachancea | 4120  
 
 📊 Visual suggestion:  
-**Try to visualize it as a heatmap of `n_shared` values or a network graph showing species as nodes, connected by edge width ∝ number of shared orthogroups.**  
+**Try to visualize it as a heatmap of `n_shared` values.**  
 
 ##### 7\. Build a presence/absence matrix
 ```
