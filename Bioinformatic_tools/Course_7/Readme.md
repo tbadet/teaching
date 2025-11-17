@@ -7,7 +7,7 @@ By comparing gene sequences and reconstructing their evolutionary histories, ort
 
 In the era of pangenomics, orthology-based analyses allow researchers to compare gene content across many genomes simultaneously, defining the core genome shared by all members of a species and the accessory genome that contributes to phenotypic diversity and ecological adaptation.  
 
-By reconstructing networks of gene relationships, orthology inference enables studies of gene family evolution, horizontal gene transfer, and the emergence of new functions, linking molecular evolution to adaptation and speciation. As a central framework in evolutionary and functional genomics, orthology inference bridges sequence similarity with biological meaning—transforming raw genomic data into evolutionary insights about how genes, pathways, and species evolve.  
+By reconstructing networks of gene relationships, orthology inference enables studies of gene family evolution, horizontal gene transfer, and the emergence of new functions, linking molecular evolution to adaptation and speciation. As a central framework in evolutionary and functional genomics, orthology inference bridges sequence similarity with biological meaning, transforming raw genomic data into evolutionary insights about how genes, pathways, and species evolve.  
 
 ----------------------------------------
 
